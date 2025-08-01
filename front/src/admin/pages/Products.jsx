@@ -1,15 +1,65 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { API_URL } from "../../constant/api";
 
 export default function Products() {
-  const [products, setProducts] = useState([]); // تفترض جلبها من API لاحقًا
-  const [categories, setCategories] = useState([]); // نفس الشيء
+  const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+
+  useEffect(() => {
+    fetchProducts();
+    fetchCategories();
+  }, []);
+
+  const fetchProducts = async () => {
+    try {
+      setLoading(true);
+      console.log('Fetching products from:', `${API_URL}/products`);
+      const response = await axios.get(`${API_URL}/products`);
+      console.log('Products response:', response.data);
+      setProducts(response.data);
+      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+      setErrorMessage("حدث خطأ أثناء جلب المنتجات");
+      setLoading(false);
+      setTimeout(() => setErrorMessage(""), 3000);
+    }
+  };
+
+  const fetchCategories = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/categories`);
+      setCategories(Array.isArray(response.data) ? response.data : []);
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+    }
+  };
 
   const openEditModal = (product) => setSelectedProduct(product);
   const closeModals = () => {
     setShowAddModal(false);
     setSelectedProduct(null);
+  };
+
+  const handleDeleteProduct = async (id) => {
+    if (window.confirm("هل أنت متأكد من حذف هذا المنتج؟")) {
+      try {
+        await axios.delete(`${API_URL}/products/${id}`);
+        setSuccessMessage("تم حذف المنتج بنجاح");
+        fetchProducts();
+        setTimeout(() => setSuccessMessage(""), 3000);
+      } catch (error) {
+        console.error("Error deleting product:", error);
+        setErrorMessage("حدث خطأ أثناء حذف المنتج");
+        setTimeout(() => setErrorMessage(""), 3000);
+      }
+    }
   };
 
   return (
@@ -21,6 +71,18 @@ export default function Products() {
         </button>
       </div>
 
+      {successMessage && (
+        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
+          {successMessage}
+        </div>
+      )}
+
+      {errorMessage && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+          {errorMessage}
+        </div>
+      )}
+
       <div className="card">
         <table className="styled-table w-full">
           <thead>
@@ -29,7 +91,9 @@ export default function Products() {
             </tr>
           </thead>
           <tbody>
-            {products.length === 0 ? (
+            {loading ? (
+              <tr><td colSpan="6" className="text-center p-4">جاري التحميل...</td></tr>
+            ) : products.length === 0 ? (
               <tr><td colSpan="6" className="text-center p-4">No products found.</td></tr>
             ) : (
               products.map((p) => (
@@ -41,7 +105,7 @@ export default function Products() {
                   <td>{p.stock}</td>
                   <td>
                     <button onClick={() => openEditModal(p)} className="btn-edit">✏️ Edit</button>
-                    <button onClick={() => alert("Confirm delete")} className="btn-delete">🗑️ Delete</button>
+                    <button onClick={() => handleDeleteProduct(p.id)} className="btn-delete">🗑️ Delete</button>
                   </td>
                 </tr>
               ))
@@ -50,31 +114,72 @@ export default function Products() {
         </table>
       </div>
 
-      {/* Add Modal */}
       {showAddModal && (
         <ProductModal
           title="Add New Product"
           categories={categories}
           onClose={closeModals}
-          onSubmit={(data) => {
-            // أضف المنتج أو أرسل للـ API هنا
-            console.log("New product:", data);
-            closeModals();
+          onSubmit={async (data) => {
+            try {
+              const formData = new FormData();
+              formData.append('title', data.title);
+              formData.append('description', data.description);
+              formData.append('price', data.price);
+              formData.append('stock', data.stock);
+              formData.append('category_id', data.category_id);
+              if (data.images && data.images.length > 0) {
+                data.images.forEach(image => {
+                  formData.append('images[]', image);
+                });
+              }
+              await axios.post(`${API_URL}/products`, formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+              });
+              setSuccessMessage("تم إضافة المنتج بنجاح");
+              fetchProducts();
+              closeModals();
+              setTimeout(() => setSuccessMessage(""), 3000);
+            } catch (error) {
+              console.error("Error adding product:", error);
+              setErrorMessage("حدث خطأ أثناء إضافة المنتج");
+              setTimeout(() => setErrorMessage(""), 3000);
+            }
           }}
         />
       )}
 
-      {/* Edit Modal */}
       {selectedProduct && (
         <ProductModal
           title="Edit Product"
           categories={categories}
           product={selectedProduct}
           onClose={closeModals}
-          onSubmit={(data) => {
-            // عدل المنتج أو أرسل للـ API هنا
-            console.log("Edit product:", data);
-            closeModals();
+          onSubmit={async (data) => {
+            try {
+              const formData = new FormData();
+              formData.append('_method', 'PUT');
+              formData.append('title', data.title);
+              formData.append('description', data.description);
+              formData.append('price', data.price);
+              formData.append('stock', data.stock);
+              formData.append('category_id', data.category_id);
+              if (data.images && data.images.length > 0) {
+                data.images.forEach(image => {
+                  formData.append('images[]', image);
+                });
+              }
+              await axios.post(`${API_URL}/products/${selectedProduct.id}`, formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+              });
+              setSuccessMessage("تم تحديث المنتج بنجاح");
+              fetchProducts();
+              closeModals();
+              setTimeout(() => setSuccessMessage(""), 3000);
+            } catch (error) {
+              console.error("Error updating product:", error);
+              setErrorMessage("حدث خطأ أثناء تحديث المنتج");
+              setTimeout(() => setErrorMessage(""), 3000);
+            }
           }}
         />
       )}
