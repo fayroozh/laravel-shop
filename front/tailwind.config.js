@@ -1,10 +1,15 @@
+/** @type {import('tailwindcss').Config} */
 module.exports = {
-  darkMode: 'class', // ✅ هذا ضروري للتبديل اليدوي
   content: [
+    "./index.html",
     "./src/**/*.{js,jsx,ts,tsx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      fontFamily: {
+        sans: ["Instrument Sans", "ui-sans-serif", "system-ui", "sans-serif"],
+      },
+    },
   },
   plugins: [],
 }

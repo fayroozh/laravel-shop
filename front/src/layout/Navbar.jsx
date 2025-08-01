@@ -136,8 +136,7 @@ const Navbar = () => {
                 </NavLink>
               </li>
 
-              {/* Dashboard - only for admins and employees */}
-              // في قسم الـ navigation items، أضف هذا الكود بجانب البروفايل:
+         
               {token && canAccessDashboard && (
               <li className="navbar-menu-item">
                 <a

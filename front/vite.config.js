@@ -37,6 +37,12 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       },
+      // إضافة مسارات لوحة التحكم
+      '/admin/api': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+        secure: false,
+      },
     },
   },
  

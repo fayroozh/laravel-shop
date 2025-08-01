@@ -1,8 +1,6 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Http\Request;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\EmployeeController;
@@ -14,147 +12,121 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Admin\ReportController;
-// https://github.com/fayroozh/laravel-shop.git
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-*/
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\AdminAuthController;
 
-// Home page
-Route::get('/', function () {
-    return view('welcome');
-});
+// ✅ توجيه المستخدم مباشرة إلى واجهة React
+Route::get('/', fn () => redirect('http://localhost:3000/'));
 
-// Check if web is working
-Route::get('/web-check', function () {
-    return 'web route working';
-});
+// ✅ مسارات التحقق
+Route::get('/web-check', fn () => 'web route working');
+Route::get('/api-test', fn () => view('api-test'));
 
-// API test page
-Route::get('/api-test', function () {
-    return view('api-test');
-});
+// ✅ مصادقة المستخدم
+Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
+Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
+Route::get('/register', [AuthController::class, 'showRegistrationForm'])->name('register');
+Route::post('/register', [AuthController::class, 'store'])->name('register.submit');
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-// Authentication Routes
-Route::middleware('guest')->group(function () {
-    Route::get('/login', function () {
-        return view('auth.login');
-    })->name('login');
+// ✅ لوحة تحكم المشرفين (Blade) - محمية بالمصادقة
+// Mover estas rutas dentro del grupo de middleware de autenticación
+Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
 
-    Route::post('/login', function (Request $request) {
-        $credentials = $request->only('email', 'password');
-        $remember = $request->boolean('remember');
-    
-        if (Auth::attempt($credentials, $remember)) {
-            $request->session()->regenerate();
-            $user = Auth::user();
-    
-            // إنشاء توكن للمستخدم
-            $token = $user->createToken('auth-token')->plainTextToken;
-            
-            if ($user->is_admin || $user->is_employee_role) {
-                // للإداريين والموظفين: توجيه مباشر للوحة التحكم
-                return redirect()->route('admin.dashboard');
-            } else {
-                // للمستخدمين العاديين: توجيه للصفحة الرئيسية React مع التوكن
-                return redirect('/?token=' . $token . '&user=' . urlencode(json_encode([
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'is_admin' => $user->is_admin,
-                    'is_employee' => $user->is_employee_role
-                ])));
-            }
-        }
-    
-        return back()->withErrors([
-            'email' => 'Invalid login credentials.'
-        ]);
-    })->name('login.submit');
-});
+    Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
 
-// Admin Routes (Blade templates)
-Route::prefix('admin')->name('admin.')
-    ->middleware(['auth', 'admin'])
-    ->group(function () {
-        Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
-
-        // Reports Routes
-        Route::prefix('reports')->group(function () {
-            Route::get('/', [ReportController::class, 'index'])->name('reports.index');
-            Route::get('/sales', [ReportController::class, 'sales'])->name('reports.sales');
-            Route::get('/employees', [ReportController::class, 'employees'])->name('reports.employees');
-            Route::get('/customers', [ReportController::class, 'customers'])->name('reports.customers');
-        });
-
-        // Resource Routes
-        Route::get('/employees', [AdminController::class, 'employees'])->name('employees.index');
-        Route::get('/suppliers', [AdminController::class, 'suppliers'])->name('suppliers.index');
-        Route::get('/orders', [AdminController::class, 'orders'])->name('orders.index');
-        Route::get('/feedback', [AdminController::class, 'feedback'])->name('feedback.index');
-        Route::get('/categories', [AdminController::class, 'categories'])->name('categories.index');
-        Route::get('/products', [AdminController::class, 'products'])->name('products.index');
-        Route::get('/users', [UserController::class, 'index'])->name('users.index');
-        
-        // Products CRUD
-        Route::prefix('products')->group(function () {
-            Route::post('/store', [ProductController::class, 'store'])->name('products.store');
-            Route::put('/{id}', [ProductController::class, 'update'])->name('products.update');
-            Route::delete('/{id}', [ProductController::class, 'destroy'])->name('products.destroy');
-        });
-
-        // Categories CRUD
-        Route::prefix('categories')->group(function () {
-            Route::post('/', [CategoryController::class, 'store'])->name('categories.store');
-            Route::put('/{category}', [CategoryController::class, 'update'])->name('categories.update');
-            Route::delete('/{category}', [CategoryController::class, 'destroy'])->name('categories.destroy');
-        });
-
-        // Suppliers CRUD
-        Route::prefix('suppliers')->group(function () {
-            Route::post('/store', [SupplierController::class, 'store'])->name('suppliers.store');
-            Route::put('/{supplier}', [SupplierController::class, 'update'])->name('suppliers.update');
-            Route::delete('/{supplier}', [SupplierController::class, 'destroy'])->name('suppliers.destroy');
-        });
-
-        // Employees CRUD
-        Route::prefix('employees')->group(function () {
-            Route::post('/', [EmployeeController::class, 'store'])->name('employees.store');
-            Route::put('/{employee}', [EmployeeController::class, 'update'])->name('employees.update');
-            Route::delete('/{employee}', [EmployeeController::class, 'destroy'])->name('employees.destroy');
-        });
-
-        // Orders Management
-        Route::prefix('orders')->group(function () {
-            Route::put('/{id}', [OrderController::class, 'update'])->name('orders.update');
-        });
-
-        // Export and Activities
-        Route::get('/export-report/{format}', [AdminController::class, 'exportReport'])->name('export.report');
-        Route::get('/activities', [AdminController::class, 'activities'])->name('activities.index');
-
-        // Users Management
-        Route::prefix('users')->group(function () {
-            Route::post('/', [UserController::class, 'store'])->name('users.store');
-            Route::put('/{user}', [UserController::class, 'update'])->name('users.update');
-            Route::delete('/{user}', [UserController::class, 'destroy'])->name('users.destroy');
-        });
-
-        // Roles Management
-        Route::prefix('roles')->group(function () {
-            Route::get('/', [RoleController::class, 'index'])->name('roles.index');
-            Route::post('/', [RoleController::class, 'store'])->name('roles.store');
-            Route::put('/{role}', [RoleController::class, 'update'])->name('roles.update');
-            Route::delete('/{role}', [RoleController::class, 'destroy'])->name('roles.destroy');
-        });
-
-        // Notifications
-        Route::prefix('notifications')->group(function () {
-            Route::get('/', [NotificationController::class, 'index'])->name('notifications.index');
-            Route::post('/{id}/mark-as-read', [NotificationController::class, 'markAsRead'])->name('notifications.markAsRead');
-            Route::post('/mark-all-as-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.markAllAsRead');
-            Route::get('/unread-count', [NotificationController::class, 'getUnreadCount'])->name('notifications.unreadCount');
-            Route::get('/latest', [NotificationController::class, 'getLatestNotifications'])->name('notifications.latest');
-        });
+    // ✅ التقارير
+    Route::prefix('reports')->name('reports.')->group(function () {
+        Route::get('/', [ReportController::class, 'index'])->name('index');
+        Route::get('/inventory', [ReportController::class, 'inventory'])->name('inventory');
+        Route::get('/sales', [ReportController::class, 'sales'])->name('sales');
+        Route::get('/customers', [ReportController::class, 'customers'])->name('customers');
+        Route::get('/employees', [ReportController::class, 'employees'])->name('employees');
     });
+
+    // ✅ روابط الموارد الرئيسية
+    Route::get('/employees', [AdminController::class, 'employees'])->name('employees');
+    Route::get('/suppliers', [AdminController::class, 'suppliers'])->name('suppliers');
+    Route::get('/orders', [AdminController::class, 'orders'])->name('orders');
+    Route::get('/feedback', [AdminController::class, 'feedback'])->name('feedback');
+    Route::get('/categories', [AdminController::class, 'categories'])->name('categories');
+    Route::get('/products', [AdminController::class, 'products'])->name('products');
+    Route::get('/users', [UserController::class, 'index'])->name('users');
+
+    // ✅ منتجات
+    // Products Management
+    Route::prefix('products')->group(function () {
+        Route::post('/store', [ProductController::class, 'store'])->name('products.store');
+        Route::put('/{product}', [ProductController::class, 'update'])->name('products.update');
+        Route::delete('/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
+        Route::get('/search', [ProductController::class, 'search'])->name('products.search');
+    });
+
+    // ✅ تصنيفات
+    Route::prefix('categories')->group(function () {
+        Route::post('/', [CategoryController::class, 'store'])->name('categories.store');
+        Route::put('/{category}', [CategoryController::class, 'update'])->name('categories.update');
+        Route::delete('/{category}', [CategoryController::class, 'destroy'])->name('categories.destroy');
+    });
+
+    // ✅ موردين
+    Route::prefix('suppliers')->group(function () {
+        Route::post('/store', [SupplierController::class, 'store'])->name('suppliers.store');
+        Route::put('/{supplier}', [SupplierController::class, 'update'])->name('suppliers.update');
+        Route::delete('/{supplier}', [SupplierController::class, 'destroy'])->name('suppliers.destroy');
+        Route::get('/search', [SupplierController::class, 'search'])->name('suppliers.search');
+    });
+
+    // ✅ موظفين
+    Route::prefix('employees')->group(function () {
+        Route::post('/', [EmployeeController::class, 'store'])->name('employees.store');
+        Route::put('/{employee}', [EmployeeController::class, 'update'])->name('employees.update');
+        Route::delete('/{employee}', [EmployeeController::class, 'destroy'])->name('employees.destroy');
+        Route::get('/search', [EmployeeController::class, 'search'])->name('employees.search');
+    });
+
+    // ✅ الطلبات
+    Route::prefix('orders')->group(function () {
+        Route::put('/{id}', [OrderController::class, 'update'])->name('orders.update');
+    });
+
+    // ✅ تصدير و أنشطة
+    Route::get('/export-report/{format}', [AdminController::class, 'exportReport'])->name('export.report');
+    Route::get('/activities', [AdminController::class, 'activities'])->name('activities');
+
+    // ✅ المستخدمين
+       Route::prefix('users')->name('users.')->group(function () {
+           Route::post('/store', [UserController::class, 'store'])->name('store');
+           Route::put('/{user}', [UserController::class, 'update'])->name('update');
+           Route::delete('/{user}', [UserController::class, 'destroy'])->name('destroy');
+           Route::get('/search', [UserController::class, 'search'])->name('search');
+       });
+    
+    
+
+    // ✅ الصلاحيات
+    Route::prefix('roles')->group(function () {
+        Route::get('/', [RoleController::class, 'index'])->name('roles.index');
+        Route::post('/', [RoleController::class, 'store'])->name('roles.store');
+        Route::put('/{role}', [RoleController::class, 'update'])->name('roles.update');
+        Route::delete('/{role}', [RoleController::class, 'destroy'])->name('roles.destroy');
+    });
+
+    // ✅ الإشعارات
+    Route::prefix('notifications')->group(function () {
+        Route::get('/', [NotificationController::class, 'index'])->name('notifications.index');
+        Route::post('/{id}/mark-as-read', [NotificationController::class, 'markAsRead'])->name('notifications.markAsRead');
+        Route::post('/mark-all-as-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.markAllAsRead');
+        Route::get('/unread-count', [NotificationController::class, 'getUnreadCount'])->name('notifications.unreadCount');
+        Route::get('/latest', [NotificationController::class, 'getLatestNotifications'])->name('notifications.latest');
+    });
+    
+    // General search
+    Route::get('/search', [AdminController::class, 'search'])->name('search');
+});
+
+// ✅ تسجيل دخول المشرفين
+Route::get('/admin/login', [AdminAuthController::class, 'showLoginForm'])->name('admin.login');
+Route::post('/admin/login', [AdminAuthController::class, 'login'])->name('admin.login.submit');
+Route::post('/admin/logout', [AdminAuthController::class, 'logout'])->name('admin.logout');
+

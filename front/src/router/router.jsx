@@ -9,18 +9,26 @@ import RegisterPage from "../auth/RegisterPage";
 import Slider from "../slider/Slider";
 import Home from "../Home/Home";
 
-// استيراد صفحة لوحة التحكم (يجب إنشاؤها إذا لم تكن موجودة)
-// import AdminDashboard from "../admin/Dashboard";
-// {
-//   path: "admin/dashboard",
-//   element: <AdminDashboard />,
-// },
+// استيراد مكونات لوحة التحكم
+import AdminLayout from "../admin/layouts/AdminLayout";
+import Dashboard from "../admin/pages/Dashboard";
+import AdminProducts from "../admin/pages/Products";
+import AdminOrders from "../admin/pages/Orders";
+import AdminFeedback from "../admin/pages/Feedback";
+import AdminUsers from "../admin/pages/Users";
+import AdminEmployees from "../admin/pages/Employees";
+import AdminReports from "../admin/pages/Reports";
+
+// استيراد المكونات الجديدة
+import AdminCategories from "../admin/pages/Categories";
+import AdminRoles from "../admin/pages/Roles";
+import AdminActivities from "../admin/pages/Activities";
+import AdminNotifications from "../admin/pages/Notifications";
 
 const router = createBrowserRouter([
   {
     path: "/",
     element: <App />,
-
     children: [
       {
         index: true,
@@ -54,12 +62,59 @@ const router = createBrowserRouter([
         path: "slider",
         element: <Slider />,
       },
-      // // إضافة مسار لوحة التحكم
-      // {
-      //   path: "admin/dashboard",
-      //   element: <AdminDashboard />,
-      // },
+    ],
+  },
+  // إضافة مسارات لوحة التحكم
+  {
+    path: "/admin",
+    element: <AdminLayout />,
+    children: [
+      {
+        path: "dashboard",
+        element: <Dashboard />,
+      },
+      {
+        path: "products",
+        element: <AdminProducts />,
+      },
+      {
+        path: "categories",
+        element: <AdminCategories />,
+      },
+      {
+        path: "orders",
+        element: <AdminOrders />,
+      },
+      {
+        path: "feedback",
+        element: <AdminFeedback />,
+      },
+      {
+        path: "notifications",
+        element: <AdminNotifications />,
+      },
+      {
+        path: "activities",
+        element: <AdminActivities />,
+      },
+      {
+        path: "users",
+        element: <AdminUsers />,
+      },
+      {
+        path: "employees",
+        element: <AdminEmployees />,
+      },
+      {
+        path: "roles",
+        element: <AdminRoles />,
+      },
+      {
+        path: "reports",
+        element: <AdminReports />,
+      },
     ],
   },
 ]);
+
 export default router;
