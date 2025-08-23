@@ -15,7 +15,7 @@ export const useProduct = () => {
         setError(null);   
 
         // استخدام apiClient بدلاً من axios مباشرة
-        const response = await apiClient.get('/api/products');
+        const response = await apiClient.get('/frontend/products'); // إزالة /api المكرر
         
         // التحقق من هيكل البيانات والتعامل معه بشكل صحيح
         if (response.data && response.data.products) {

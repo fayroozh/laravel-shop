@@ -3,14 +3,27 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Models\Category;
 use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
-    // جلب كل المنتجات مع التصنيفات
+    /**
+     * API: Fetch all products for the React frontend.
+     */
+    public function apiIndex()
+    {
+        $products = Product::with('category')->get();
+        return response()->json($products);
+    }
+
+    /**
+     * Display a listing of the resource.
+     */
+    // جلب كل المنتجات للعرض
     public function index(Request $request)
     {
-        $query = Product::with('category'); // تحميل التصنيفات مع المنتجات
+        $query = Product::with('category'); // تحميل التصنيف فقط
 
         if ($request->has('search')) {
             $query->where('title', 'like', '%' . $request->search . '%');
@@ -29,19 +42,24 @@ class ProductController extends Controller
         }
 
         if ($request->has('sort')) {
-            $sortBy = $request->sort;
-            $query->orderBy($sortBy, 'asc');
+            $query->orderBy($request->sort, 'asc');
         }
 
         $products = $query->get();
-        
-        return response()->json([
-            'products' => $products,
-            'total' => $products->count()
-        ]);
+        $categories = Category::all();
+
+        // عرض Blade في admin/products.blade.php
+        return view('admin.products', compact('products', 'categories'));
     }
 
-    // إضافة منتج جديد وتسجيل المخزون
+    // صفحة إنشاء منتج جديد
+    public function create()
+    {
+        $categories = Category::all();
+        return view('admin.products', compact('categories'));
+    }
+
+    // إضافة منتج جديد
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -54,39 +72,16 @@ class ProductController extends Controller
             'stock' => 'nullable|integer',
         ]);
 
-        $product = Product::create($validated);
+        Product::create($validated);
 
-        if ($request->hasFile('images')) {
-            foreach ($request->file('images') as $image) {
-                $path = $image->store('products', 'public');
-                $product->images()->create([
-                    'image_path' => $path
-                ]);
-            }
-        }
-
-        // تسجيل حركة المخزون الأولية
-        if ($product->stock > 0) {
-            $product->updateStock(
-                $product->stock,
-                'in',
-                'initial',
-                null,
-                'Initial stock when product was created'
-            );
-        }
-
-        if ($request->expectsJson()) {
-            return response()->json($product, 201);
-        }
-
-        return redirect()->route('admin.products')->with('success', 'Product added successfully');
+        return redirect()->route('admin.products')->with('success', 'تمت إضافة المنتج بنجاح');
     }
 
-    // عرض منتج محدد
-    public function show(Product $product)
+    // عرض صفحة تعديل منتج
+    public function edit(Product $product)
     {
-        return $product;
+        $categories = Category::all();
+        return view('admin.products', compact('product', 'categories'));
     }
 
     // تحديث منتج
@@ -98,38 +93,17 @@ class ProductController extends Controller
             'price' => 'nullable|numeric',
             'stock' => 'nullable|integer',
             'category_id' => 'nullable|exists:categories,id',
-            'image_url' => 'nullable|string'
         ]);
 
         $product->update($data);
-        return response()->json($product);
+
+        return redirect()->route('admin.products')->with('success', 'تم تحديث المنتج بنجاح');
     }
 
     // حذف منتج
     public function destroy(Product $product)
     {
         $product->delete();
-        return response()->json(['message' => 'Product deleted']);
-    }
-
-    // تعديل المخزون يدوياً
-    public function adjustStock(Request $request, Product $product)
-    {
-        $validated = $request->validate([
-            'quantity' => 'required|integer|not_in:0',
-            'notes' => 'nullable|string'
-        ]);
-
-        $type = $validated['quantity'] > 0 ? 'in' : 'out';
-
-        $product->updateStock(
-            $validated['quantity'],
-            $type,
-            'manual',
-            null,
-            $validated['notes']
-        );
-
-        return redirect()->back()->with('success', 'تم تعديل المخزون بنجاح');
+        return redirect()->route('admin.products')->with('success', 'تم حذف المنتج');
     }
 }

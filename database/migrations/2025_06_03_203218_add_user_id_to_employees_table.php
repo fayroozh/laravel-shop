@@ -10,13 +10,15 @@ return new class extends Migration
      * Run the migrations.
      */
     public function up(): void
-{
+    {
         Schema::table('employees', function (Blueprint $table) {
-        $table->unsignedBigInteger('user_id')->nullable()->unique()->after('id');
-        $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-    });
-}
-
+            // ✅ نتأكد أن العمود غير موجود قبل إضافته
+            if (!Schema::hasColumn('employees', 'user_id')) {
+                $table->unsignedBigInteger('user_id')->nullable()->unique()->after('id');
+                $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            }
+        });
+    }
 
     /**
      * Reverse the migrations.
@@ -24,7 +26,10 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('employees', function (Blueprint $table) {
-            //
+            // ✅ حذف العلاقة أولًا إذا كانت موجودة
+            $table->dropForeign(['user_id']);
+            // ✅ حذف العمود
+            $table->dropColumn('user_id');
         });
     }
 };

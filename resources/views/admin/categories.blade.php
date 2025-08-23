@@ -6,7 +6,7 @@
             <button onclick="openModal('addCategoryModal')" class="btn-add">➕ Add Category</button>
         </div>
     </div>
-    
+
     @if(session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
@@ -14,7 +14,10 @@
     <div class="card">
         <table class="styled-table">
             <tr>
-                <th>ID</th><th>Name</th><th>Description</th><th>Actions</th>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Actions</th>
             </tr>
             @foreach($categories as $c)
                 <tr>
@@ -22,8 +25,11 @@
                     <td>{{ $c->name }}</td>
                     <td>{{ $c->description }}</td>
                     <td>
-                        <a href="#" class="btn-edit" onclick="openEditModal('{{ $c->id }}', '{{ $c->name }}', '{{ $c->description }}')" title="Edit">✏️</a>
-                        <a href="#" class="btn-delete" onclick="openModal('deleteCategoryModal{{ $c->id }}')" title="Delete">🗑️</a>
+                        <a href="#" class="btn-edit"
+                            onclick="openEditModal('{{ $c->id }}', '{{ $c->name }}', '{{ $c->description }}')"
+                            title="Edit">✏️</a>
+                        <a href="#" class="btn-delete" onclick="openModal('deleteCategoryModal{{ $c->id }}')"
+                            title="Delete">🗑️</a>
                     </td>
                 </tr>
             @endforeach
@@ -69,25 +75,44 @@
             </form>
         </div>
     </div>
-    
+
     <!-- Delete Category Modals -->
-    @foreach($categories as $c)
-    <div id="deleteCategoryModal{{ $c->id }}" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeModal('deleteCategoryModal{{ $c->id }}')">&times;</span>
-            <h2>Delete Category</h2>
-            <p>Are you sure you want to delete the category "{{ $c->name }}"?</p>
-            <p>This action cannot be undone and may affect products assigned to this category.</p>
-            <form method="POST" action="{{ route('admin.categories.destroy', $c->id) }}">
-                @csrf
-                @method('DELETE')
-                <div class="form-actions">
-                    <button type="button" class="btn-cancel" onclick="closeModal('deleteCategoryModal{{ $c->id }}')">Cancel</button>
-                    <button type="submit" class="btn-delete">Delete Category</button>
-                </div>
-            </form>
+    @foreach($categories as $category)
+        <div id="editCategoryModal{{ $category->id }}" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="closeModal('editCategoryModal{{ $category->id }}')">&times;</span>
+                <h2>Edit Category</h2>
+                <form method="POST" action="{{ route('admin.categories.update', $category->id) }}">
+                    @csrf
+                    @method('PUT')
+                    <div class="form-group">
+                        <label for="edit_name">Category Name</label>
+                        <input type="text" id="edit_name" name="name" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_description">Description</label>
+                        <textarea id="edit_description" name="description" class="form-control" rows="4"></textarea>
+                    </div>
+                    <button type="submit" class="btn-submit">Update Category</button>
+                </form>
+            </div>
         </div>
-    </div>
+        <div id="deleteCategoryModal{{ $category->id }}" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="closeModal('deleteCategoryModal{{ $category->id }}')">&times;</span>
+                <h2>Delete Category</h2>
+                <p>Are you sure you want to delete <strong>{{ $category->name }}</strong>?</p>
+                <form method="POST" action="{{ route('admin.categories.destroy', $category->id) }}">
+                    @csrf
+                    @method('DELETE')
+                    <div class="form-actions">
+                        <button type="button" class="btn-cancel"
+                            onclick="closeModal('deleteCategoryModal{{ $c->id }}')">Cancel</button>
+                        <button type="submit" class="btn-delete">Delete Category</button>
+                    </div>
+                </form>
+            </div>
+        </div>
     @endforeach
 
     <script>

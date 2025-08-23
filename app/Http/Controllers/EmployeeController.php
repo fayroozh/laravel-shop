@@ -3,17 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\Employee;
-use App\Models\Role;
-use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use App\Services\ActivityLogger;
 
 class EmployeeController extends Controller
 {
-    public function index() {
-        // نرجع العرض مباشرة مع البيانات المرتبطة بـ user و roles
-        $employees = Employee::with('user.roles')->get();
+    public function index()
+    {
+        $employees = Employee::all();
         return view('admin.employees', compact('employees'));
     }
 
@@ -27,17 +23,17 @@ class EmployeeController extends Controller
             'password' => 'required|string|min:6',
             'role_id' => 'required|exists:roles,id'
         ]);
-    
+
         $user = User::create([
             'name' => $data['name'],
             'email' => $data['email'],
             'password' => Hash::make($data['password'])
         ]);
-    
+
         if ($data['role_id']) {
             $user->roles()->attach($data['role_id']);
         }
-    
+
         $employee = Employee::create([
             'name' => $data['name'],
             'email' => $data['email'],
@@ -45,9 +41,9 @@ class EmployeeController extends Controller
             'mobile' => $data['mobile'] ?? null,
             'user_id' => $user->id
         ]);
-    
+
         ActivityLogger::log("Added new employee: {$employee->name}", "👨‍💼", $employee);
-    
+
         return redirect()->route('admin.employees')->with('success', 'Employee added successfully');
     }
 
@@ -61,14 +57,14 @@ class EmployeeController extends Controller
             'password' => 'nullable|string|min:6',
             'role_id' => 'required|exists:roles,id',
         ]);
-        
+
         $employee->update([
             'name' => $data['name'],
             'email' => $data['email'],
             'position' => $data['position'],
             'mobile' => $data['mobile'] ?? $employee->mobile
         ]);
-        
+
         if ($employee->user) {
             $userUpdate = [
                 'name' => $data['name'],
@@ -80,9 +76,9 @@ class EmployeeController extends Controller
             $employee->user->update($userUpdate);
             $employee->user->roles()->sync([$data['role_id']]);
         }
-        
+
         ActivityLogger::log("Updated employee: {$employee->name}", "👨‍💼", $employee);
-        
+
         return redirect()->route('admin.employees')->with('success', 'Employee updated successfully');
     }
 

@@ -7,12 +7,10 @@ use Illuminate\Http\Request;
 
 class FeedbackController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        return Feedback::with('user')->latest()->get();
+        $feedback = Feedback::with('user')->latest()->get();
+        return view('admin.feedback', compact('feedback'));
     }
 
     /**
@@ -27,21 +25,21 @@ class FeedbackController extends Controller
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
-{
+    {
         $validated = $request->validate([
             'feedback' => 'required|string'
-    ]);
+        ]);
 
         $feedback = $request->user()->feedback()->create([
             'feedback' => $validated['feedback'],
             'name' => $request->user()->name,
-    ]);
+        ]);
 
         return response()->json([
             'message' => 'Feedback submitted successfully',
             'feedback' => $feedback
         ], 201);
-}
+    }
 
 
     /**

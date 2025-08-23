@@ -72,5 +72,6 @@ class Product extends Model
             $user->notify(new \App\Notifications\LowStockNotification($this));
         }
     }
+    
 }
 

@@ -8,27 +8,35 @@ use App\Models\User;
 
 class AuthController extends Controller
 {
-    // تسجيل مستخدم جديد
-    public function register(Request $request)
+    // تسجيل مستخدم جديد (لمسارات الويب)
+    public function store(Request $request)
     {
+        // استخدام نفس منطق دالة register
         $fields = $request->validate([
             'name' => 'required|string',
             'email' => 'required|string|email|unique:users,email',
             'password' => 'required|string|confirmed'
         ]);
-
+    
         $user = User::create([
             'name' => $fields['name'],
             'email' => $fields['email'],
             'password' => bcrypt($fields['password']),
         ]);
-
+    
         $token = $user->createToken('auth_token')->plainTextToken;
-
+    
         return response()->json([
             'user' => $user,
             'token' => $token,
         ], 201);
+    }
+    
+    // إضافة دالة لعرض نموذج التسجيل
+    public function showRegistrationForm()
+    {
+        // توجيه المستخدم إلى واجهة React
+        return redirect('http://localhost:3000/register');
     }
 
     // تسجيل الدخول

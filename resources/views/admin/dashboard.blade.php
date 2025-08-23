@@ -1,4 +1,3 @@
-
 @extends('layouts.admin')
 
 @section('content')
@@ -21,7 +20,7 @@
             </div>
             <a href="{{ route('admin.products') }}" class="stat-link">View Details →</a>
         </div>
-        
+
         <div class="stat-card orders">
             <div class="stat-icon">🛒</div>
             <div class="stat-content">
@@ -31,7 +30,7 @@
             </div>
             <a href="{{ route('admin.orders') }}" class="stat-link">View Details →</a>
         </div>
-        
+
         <div class="stat-card employees">
             <div class="stat-icon">👥</div>
             <div class="stat-content">
@@ -41,7 +40,7 @@
             </div>
             <a href="{{ route('admin.employees') }}" class="stat-link">View Details →</a>
         </div>
-        
+
         <div class="stat-card suppliers">
             <div class="stat-icon">🏭</div>
             <div class="stat-content">
@@ -51,7 +50,7 @@
             </div>
             <a href="{{ route('admin.suppliers') }}" class="stat-link">View Details →</a>
         </div>
-        
+
         <div class="stat-card feedback">
             <div class="stat-icon">📝</div>
             <div class="stat-content">
@@ -61,7 +60,7 @@
             </div>
             <a href="{{ route('admin.feedback') }}" class="stat-link">View Details →</a>
         </div>
-        
+
         <div class="stat-card revenue">
             <div class="stat-icon">💰</div>
             <div class="stat-content">
@@ -82,13 +81,13 @@
         <div class="activity-list">
             @if(isset($recentActivities) && count($recentActivities) > 0)
                 @foreach($recentActivities as $activity)
-                <div class="activity-item">
-                    <div class="activity-icon">{{ $activity->icon ?? '📋' }}</div>
-                    <div class="activity-content">
-                        <div class="activity-text">{{ $activity->description }}</div>
-                        <div class="activity-time">{{ $activity->created_at->diffForHumans() }}</div>
+                    <div class="activity-item">
+                        <div class="activity-icon">{{ $activity->icon ?? '📋' }}</div>
+                        <div class="activity-content">
+                            <div class="activity-text">{{ $activity->description }}</div>
+                            <div class="activity-time">{{ $activity->created_at->diffForHumans() }}</div>
+                        </div>
                     </div>
-                </div>
                 @endforeach
             @else
                 <div class="activity-item">
@@ -163,7 +162,9 @@
         });
 
         function exportReport(format) {
-            let url = `{{ route('admin.export.report', ['format' => '__FORMAT__']) }}`;
+            // The type 'dashboard' is a placeholder. You may need to adjust this depending on
+            // which report you intend to export from the main dashboard view.
+            let url = `{{ route('admin.reports.export', ['type' => 'dashboard', 'format' => '__FORMAT__']) }}`;
             window.location.href = url.replace('__FORMAT__', format);
         }
     </script>

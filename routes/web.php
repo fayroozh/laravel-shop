@@ -1,132 +1,133 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\ProductController;
 use App\Http\Controllers\AdminController;
-use App\Http\Controllers\EmployeeController;
-use App\Http\Controllers\SupplierController;
-use App\Http\Controllers\OrderController;
-use App\Http\Controllers\FeedbackController;
+use App\Http\Controllers\Admin\ReportController;
+use App\Http\Controllers\AdminAuthController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\FeedbackController;
+use App\Http\Controllers\InventoryController;
+use App\Http\Controllers\OrderController;
+use App\Http\Controllers\ProductController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\NotificationController;
-use App\Http\Controllers\Admin\ReportController;
-use App\Http\Controllers\AuthController;
-use App\Http\Controllers\AdminAuthController;
 
-// ✅ توجيه المستخدم مباشرة إلى واجهة React
-Route::get('/', fn () => redirect('http://localhost:3000/'));
+/*
+|--------------------------------------------------------------------------
+| Web Routes for Admin Panel (Blade)
+|--------------------------------------------------------------------------
+*/
 
-// ✅ مسارات التحقق
-Route::get('/web-check', fn () => 'web route working');
-Route::get('/api-test', fn () => view('api-test'));
-
-// ✅ مصادقة المستخدم
-Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
-Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
-Route::get('/register', [AuthController::class, 'showRegistrationForm'])->name('register');
-Route::post('/register', [AuthController::class, 'store'])->name('register.submit');
-Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
-
-// ✅ لوحة تحكم المشرفين (Blade) - محمية بالمصادقة
-// Mover estas rutas dentro del grupo de middleware de autenticación
-Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
-
-    Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
-
-    // ✅ التقارير
-    Route::prefix('reports')->name('reports.')->group(function () {
-        Route::get('/', [ReportController::class, 'index'])->name('index');
-        Route::get('/inventory', [ReportController::class, 'inventory'])->name('inventory');
-        Route::get('/sales', [ReportController::class, 'sales'])->name('sales');
-        Route::get('/customers', [ReportController::class, 'customers'])->name('customers');
-        Route::get('/employees', [ReportController::class, 'employees'])->name('employees');
-    });
-
-    // ✅ روابط الموارد الرئيسية
-    Route::get('/employees', [AdminController::class, 'employees'])->name('employees');
-    Route::get('/suppliers', [AdminController::class, 'suppliers'])->name('suppliers');
-    Route::get('/orders', [AdminController::class, 'orders'])->name('orders');
-    Route::get('/feedback', [AdminController::class, 'feedback'])->name('feedback');
-    Route::get('/categories', [AdminController::class, 'categories'])->name('categories');
-    Route::get('/products', [AdminController::class, 'products'])->name('products');
-    Route::get('/users', [UserController::class, 'index'])->name('users');
-
-    // ✅ منتجات
-    // Products Management
-    Route::prefix('products')->group(function () {
-        Route::post('/store', [ProductController::class, 'store'])->name('products.store');
-        Route::put('/{product}', [ProductController::class, 'update'])->name('products.update');
-        Route::delete('/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
-        Route::get('/search', [ProductController::class, 'search'])->name('products.search');
-    });
-
-    // ✅ تصنيفات
-    Route::prefix('categories')->group(function () {
-        Route::post('/', [CategoryController::class, 'store'])->name('categories.store');
-        Route::put('/{category}', [CategoryController::class, 'update'])->name('categories.update');
-        Route::delete('/{category}', [CategoryController::class, 'destroy'])->name('categories.destroy');
-    });
-
-    // ✅ موردين
-    Route::prefix('suppliers')->group(function () {
-        Route::post('/store', [SupplierController::class, 'store'])->name('suppliers.store');
-        Route::put('/{supplier}', [SupplierController::class, 'update'])->name('suppliers.update');
-        Route::delete('/{supplier}', [SupplierController::class, 'destroy'])->name('suppliers.destroy');
-        Route::get('/search', [SupplierController::class, 'search'])->name('suppliers.search');
-    });
-
-    // ✅ موظفين
-    Route::prefix('employees')->group(function () {
-        Route::post('/', [EmployeeController::class, 'store'])->name('employees.store');
-        Route::put('/{employee}', [EmployeeController::class, 'update'])->name('employees.update');
-        Route::delete('/{employee}', [EmployeeController::class, 'destroy'])->name('employees.destroy');
-        Route::get('/search', [EmployeeController::class, 'search'])->name('employees.search');
-    });
-
-    // ✅ الطلبات
-    Route::prefix('orders')->group(function () {
-        Route::put('/{id}', [OrderController::class, 'update'])->name('orders.update');
-    });
-
-    // ✅ تصدير و أنشطة
-    Route::get('/export-report/{format}', [AdminController::class, 'exportReport'])->name('export.report');
-    Route::get('/activities', [AdminController::class, 'activities'])->name('activities');
-
-    // ✅ المستخدمين
-       Route::prefix('users')->name('users.')->group(function () {
-           Route::post('/store', [UserController::class, 'store'])->name('store');
-           Route::put('/{user}', [UserController::class, 'update'])->name('update');
-           Route::delete('/{user}', [UserController::class, 'destroy'])->name('destroy');
-           Route::get('/search', [UserController::class, 'search'])->name('search');
-       });
-    
-    
-
-    // ✅ الصلاحيات
-    Route::prefix('roles')->group(function () {
-        Route::get('/', [RoleController::class, 'index'])->name('roles.index');
-        Route::post('/', [RoleController::class, 'store'])->name('roles.store');
-        Route::put('/{role}', [RoleController::class, 'update'])->name('roles.update');
-        Route::delete('/{role}', [RoleController::class, 'destroy'])->name('roles.destroy');
-    });
-
-    // ✅ الإشعارات
-    Route::prefix('notifications')->group(function () {
-        Route::get('/', [NotificationController::class, 'index'])->name('notifications.index');
-        Route::post('/{id}/mark-as-read', [NotificationController::class, 'markAsRead'])->name('notifications.markAsRead');
-        Route::post('/mark-all-as-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.markAllAsRead');
-        Route::get('/unread-count', [NotificationController::class, 'getUnreadCount'])->name('notifications.unreadCount');
-        Route::get('/latest', [NotificationController::class, 'getLatestNotifications'])->name('notifications.latest');
-    });
-    
-    // General search
-    Route::get('/search', [AdminController::class, 'search'])->name('search');
+// Redirect base URL to the React frontend
+Route::get('/', function () {
+    return redirect(env('FRONTEND_URL', 'http://localhost:5173'));
 });
 
-// ✅ تسجيل دخول المشرفين
-Route::get('/admin/login', [AdminAuthController::class, 'showLoginForm'])->name('admin.login');
-Route::post('/admin/login', [AdminAuthController::class, 'login'])->name('admin.login.submit');
-Route::post('/admin/logout', [AdminAuthController::class, 'logout'])->name('admin.logout');
+// Admin Authentication Routes
+Route::prefix('admin')->name('admin.')->group(function () {
+    Route::get('/login', [AdminAuthController::class, 'showLoginForm'])->name('login');
+    Route::post('/login', [AdminAuthController::class, 'login'])->name('login.submit');
+    Route::post('/logout', [AdminAuthController::class, 'logout'])->name('logout');
+});
 
+// Protected Admin Panel Routes
+Route::middleware(['auth', \App\Http\Middleware\AdminMiddleware::class])
+    ->prefix('admin')->name('admin.')
+    ->group(function () {
+
+        // Dashboard
+        Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
+
+        // Products
+        Route::get('products', [ProductController::class, 'index'])->name('products');
+        Route::get('products/create', [ProductController::class, 'create'])->name('products.create');
+        Route::post('products', [ProductController::class, 'store'])->name('products.store');
+        Route::get('products/{product}', [ProductController::class, 'show'])->name('products.show');
+        Route::get('products/{product}/edit', [ProductController::class, 'edit'])->name('products.edit');
+        Route::put('products/{product}', [ProductController::class, 'update'])->name('products.update');
+        Route::delete('products/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
+
+        // Categories
+        Route::get('categories', [CategoryController::class, 'index'])->name('categories');
+        Route::get('categories/create', [CategoryController::class, 'create'])->name('categories.create');
+        Route::post('categories', [CategoryController::class, 'store'])->name('categories.store');
+        Route::get('categories/{category}', [CategoryController::class, 'show'])->name('categories.show');
+        Route::get('categories/{category}/edit', [CategoryController::class, 'edit'])->name('categories.edit');
+        Route::put('categories/{category}', [CategoryController::class, 'update'])->name('categories.update');
+        Route::delete('categories/{category}', [CategoryController::class, 'destroy'])->name('categories.destroy');
+
+        // Orders
+        Route::get('orders', [OrderController::class, 'index'])->name('orders');
+        Route::get('orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+        Route::put('orders/{order}', [OrderController::class, 'update'])->name('orders.update');
+        Route::delete('orders/{order}', [OrderController::class, 'destroy'])->name('orders.destroy');
+
+        // Users
+        Route::get('users', [UserController::class, 'index'])->name('users');
+        Route::get('users/create', [UserController::class, 'create'])->name('users.create');
+        Route::post('users', [UserController::class, 'store'])->name('users.store');
+        Route::get('users/{user}', [UserController::class, 'show'])->name('users.show');
+        Route::get('users/{user}/edit', [UserController::class, 'edit'])->name('users.edit');
+        Route::put('users/{user}', [UserController::class, 'update'])->name('users.update');
+        Route::delete('users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+
+        // Employees
+        Route::get('employees', [EmployeeController::class, 'index'])->name('employees');
+        Route::get('employees/create', [EmployeeController::class, 'create'])->name('employees.create');
+        Route::post('employees', [EmployeeController::class, 'store'])->name('employees.store');
+        Route::get('employees/{employee}', [EmployeeController::class, 'show'])->name('employees.show');
+        Route::get('employees/{employee}/edit', [EmployeeController::class, 'edit'])->name('employees.edit');
+        Route::put('employees/{employee}', [EmployeeController::class, 'update'])->name('employees.update');
+        Route::delete('employees/{employee}', [EmployeeController::class, 'destroy'])->name('employees.destroy');
+
+        // Suppliers
+        Route::get('suppliers', [SupplierController::class, 'index'])->name('suppliers');
+        Route::get('suppliers/create', [SupplierController::class, 'create'])->name('suppliers.create');
+        Route::post('suppliers', [SupplierController::class, 'store'])->name('suppliers.store');
+        Route::get('suppliers/{supplier}', [SupplierController::class, 'show'])->name('suppliers.show');
+        Route::get('suppliers/{supplier}/edit', [SupplierController::class, 'edit'])->name('suppliers.edit');
+        Route::put('suppliers/{supplier}', [SupplierController::class, 'update'])->name('suppliers.update');
+        Route::delete('suppliers/{supplier}', [SupplierController::class, 'destroy'])->name('suppliers.destroy');
+
+        // Roles
+        Route::get('roles', [RoleController::class, 'index'])->name('roles.index');
+        Route::get('roles/create', [RoleController::class, 'create'])->name('roles.create');
+        Route::post('roles', [RoleController::class, 'store'])->name('roles.store');
+        Route::get('roles/{role}', [RoleController::class, 'show'])->name('roles.show');
+        Route::get('roles/{role}/edit', [RoleController::class, 'edit'])->name('roles.edit');
+        Route::put('roles/{role}', [RoleController::class, 'update'])->name('roles.update');
+        Route::delete('roles/{role}', [RoleController::class, 'destroy'])->name('roles.destroy');
+
+        // Feedback
+        Route::get('feedback', [FeedbackController::class, 'index'])->name('feedback');
+        Route::get('feedback/{feedback}', [FeedbackController::class, 'show'])->name('feedback.show');
+        Route::delete('feedback/{feedback}', [FeedbackController::class, 'destroy'])->name('feedback.destroy');
+
+        // Inventory
+        Route::get('inventory', [InventoryController::class, 'index'])->name('inventory');
+
+        // Reports
+        Route::prefix('reports')->name('reports.')->group(function () {
+            Route::get('/', [ReportController::class, 'index'])->name('index');
+            Route::get('/inventory', [ReportController::class, 'inventory'])->name('inventory');
+            Route::get('/sales', [ReportController::class, 'sales'])->name('sales');
+            Route::get('/customers', [ReportController::class, 'customers'])->name('customers');
+            Route::get('/employees', [ReportController::class, 'employees'])->name('employees');
+            Route::get('/export/{type}/{format}', [AdminController::class, 'exportReport'])->name('export');
+        });
+
+        // Notifications
+        Route::prefix('notifications')->name('notifications.')->group(function () {
+            Route::get('/', [NotificationController::class, 'index'])->name('index');
+            Route::get('/latest', [NotificationController::class, 'getLatestNotifications'])->name('latest');
+            Route::get('/unread-count', [NotificationController::class, 'getUnreadCount'])->name('unreadCount');
+            Route::post('/mark-as-read/{id}', [NotificationController::class, 'markAsRead'])->name('markAsRead');
+            Route::post('/mark-all-as-read', [NotificationController::class, 'markAllAsRead'])->name('markAllAsRead');
+        });
+
+        // Activities
+        Route::get('activities', [AdminController::class, 'activities'])->name('activities');
+    });

@@ -56,28 +56,31 @@ class User extends Authenticatable
     // الدوال المساعدة
     public function hasPermission($permission)
     {
-        foreach ($this->roles as $role) {
-            if ($role->permissions->contains('name', $permission)) {
-                return true;
-            }
+        // If user is admin, they have all permissions
+        if ($this->is_admin) {
+            return true;
         }
-        return false;
+        
+        // Check if user has the specific permission through roles
+        return $this->roles()->whereHas('permissions', function ($query) use ($permission) {
+            $query->where('name', $permission);
+        })->exists();
+    }
+
+    public function isAdmin()
+    {
+        // التحقق من خاصية is_admin أو وجود دور admin
+        return $this->is_admin === true || $this->roles()->where('name', 'admin')->exists();
     }
 
     public function isEmployee()
-{
-    // الطريقة الأفضل: التحقق من وجود سجل في جدول الموظفين
-    return $this->employee()->exists();
-}
+    {
+        // التحقق من خاصية is_employee_role أو وجود دور employee
+        return $this->is_employee_role || $this->roles()->where('name', 'employee')->exists() || $this->employee()->exists();
+    }
+
     public function getEmployeeData()
     {
         return $this->employee;
     }
-
-    public function isAdmin()
-{
-    return $this->is_admin || $this->roles()->where('name', 'admin')->exists();
-}
-
-
 }

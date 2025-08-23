@@ -7,10 +7,10 @@ use Illuminate\Http\Request;
 
 class CategoryController extends Controller
 {
-    // عرض كل التصنيفات
     public function index()
     {
-        return Category::all();
+        $categories = Category::all();
+        return view('admin.categories', compact('categories'));
     }
 
     // إضافة تصنيف

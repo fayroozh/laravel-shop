@@ -3,7 +3,7 @@ import useAuthStore from "../app/authStore";
 
 // إنشاء نسخة خاصة بـ API لوحة التحكم
 const adminApiClient = axios.create({
-  baseURL: "/api/admin", // سيتم توجيهه إلى http://localhost:8000/api/admin
+  baseURL: "http://localhost:8000/api", // تعديل هنا للعنوان الكامل
   headers: {
     "Content-Type": "application/json",
     "Accept": "application/json",

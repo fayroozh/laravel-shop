@@ -7,10 +7,10 @@ use Illuminate\Http\Request;
 
 class OrderController extends Controller
 {
-    // جلب كل الطلبات (مثلاً للإدارة)
     public function index()
     {
-        return Order::with('product')->get();
+        $orders = Order::with('user')->get();
+        return view('admin.orders', compact('orders'));
     }
 
     // إضافة طلب جديد

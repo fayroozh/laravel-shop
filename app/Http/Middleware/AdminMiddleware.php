@@ -3,37 +3,33 @@
 namespace App\Http\Middleware;
 
 use Closure;
-use Illuminate\Http\Request;
-use Illuminate\Http\Response;
-use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
-
 use Illuminate\Support\Facades\Auth;
 
 class AdminMiddleware
 {
-    public function handle(Request $request, Closure $next): SymfonyResponse
+    public function handle($request, Closure $next)
     {
-        // Check for token in cookie (from React)
-        if ($request->hasCookie('laravel_token')) {
-            $token = $request->cookie('laravel_token');
+        // التحقق من وجود token في الكوكيز
+        if ($token = $request->cookie('token')) {
             $request->headers->set('Authorization', 'Bearer ' . $token);
         }
 
-        if (!auth()->check()) {
-            if ($request->expectsJson()) {
-                return response()->json(['message' => 'Unauthorized'], 401);
-            }
-            return redirect()->route('login');
+        // التحقق من تسجيل الدخول
+        if (!Auth::check()) {
+            return $request->expectsJson()
+                ? response()->json(['message' => 'غير مصرح'], 401)
+                : redirect()->route('login');
         }
 
-        if (!auth()->user()->is_admin && !auth()->user()->is_employee_role) {
-            if ($request->expectsJson()) {
-                return response()->json(['message' => 'Access denied'], 403);
-            }
-            return redirect()->route('login');
+        $user = Auth::user();
+        
+        // التحقق من الصلاحيات
+        if (!$user->is_admin && !$user->is_employee_role) {
+            return $request->expectsJson()
+                ? response()->json(['message' => 'غير مصرح لك بالوصول'], 403)
+                : redirect()->back()->with('error', 'غير مصرح لك بالوصول');
         }
 
         return $next($request);
     }
 }
-

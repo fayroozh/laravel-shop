@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
-import { API_URL } from "../../constant/api";
+import adminApiClient from "../../services/adminApiClient";
 
 export default function Products() {
   const [products, setProducts] = useState([]);
@@ -19,22 +18,24 @@ export default function Products() {
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      console.log('Fetching products from:', `${API_URL}/products`);
-      const response = await axios.get(`${API_URL}/products`);
-      console.log('Products response:', response.data);
-      setProducts(response.data);
-      setLoading(false);
+      const response = await adminApiClient.get(`/products`);
+      const data =
+        Array.isArray(response.data)
+          ? response.data
+          : response.data.products || response.data.data || [];
+      setProducts(data);
     } catch (error) {
       console.error("Error fetching products:", error);
       setErrorMessage("حدث خطأ أثناء جلب المنتجات");
-      setLoading(false);
       setTimeout(() => setErrorMessage(""), 3000);
+    } finally {
+      setLoading(false);
     }
   };
 
   const fetchCategories = async () => {
     try {
-      const response = await axios.get(`${API_URL}/categories`);
+      const response = await adminApiClient.get(`/categories`);
       setCategories(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       console.error("Error fetching categories:", error);
@@ -50,7 +51,7 @@ export default function Products() {
   const handleDeleteProduct = async (id) => {
     if (window.confirm("هل أنت متأكد من حذف هذا المنتج؟")) {
       try {
-        await axios.delete(`${API_URL}/products/${id}`);
+        await adminApiClient.delete(`/products/${id}`);
         setSuccessMessage("تم حذف المنتج بنجاح");
         fetchProducts();
         setTimeout(() => setSuccessMessage(""), 3000);
@@ -87,14 +88,27 @@ export default function Products() {
         <table className="styled-table w-full">
           <thead>
             <tr>
-              <th>ID</th><th>Title</th><th>Price</th><th>Category</th><th>Stock</th><th>Actions</th>
+              <th>ID</th>
+              <th>Title</th>
+              <th>Price</th>
+              <th>Category</th>
+              <th>Stock</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan="6" className="text-center p-4">جاري التحميل...</td></tr>
+              <tr>
+                <td colSpan="6" className="text-center p-4">
+                  جاري التحميل...
+                </td>
+              </tr>
             ) : products.length === 0 ? (
-              <tr><td colSpan="6" className="text-center p-4">No products found.</td></tr>
+              <tr>
+                <td colSpan="6" className="text-center p-4">
+                  No products found.
+                </td>
+              </tr>
             ) : (
               products.map((p) => (
                 <tr key={p.id}>
@@ -104,8 +118,15 @@ export default function Products() {
                   <td>{p.category?.name || "-"}</td>
                   <td>{p.stock}</td>
                   <td>
-                    <button onClick={() => openEditModal(p)} className="btn-edit">✏️ Edit</button>
-                    <button onClick={() => handleDeleteProduct(p.id)} className="btn-delete">🗑️ Delete</button>
+                    <button onClick={() => openEditModal(p)} className="btn-edit">
+                      ✏️ Edit
+                    </button>
+                    <button
+                      onClick={() => handleDeleteProduct(p.id)}
+                      className="btn-delete"
+                    >
+                      🗑️ Delete
+                    </button>
                   </td>
                 </tr>
               ))
@@ -122,18 +143,18 @@ export default function Products() {
           onSubmit={async (data) => {
             try {
               const formData = new FormData();
-              formData.append('title', data.title);
-              formData.append('description', data.description);
-              formData.append('price', data.price);
-              formData.append('stock', data.stock);
-              formData.append('category_id', data.category_id);
+              formData.append("title", data.title);
+              formData.append("description", data.description);
+              formData.append("price", data.price);
+              formData.append("stock", data.stock);
+              formData.append("category_id", data.category_id);
               if (data.images && data.images.length > 0) {
-                data.images.forEach(image => {
-                  formData.append('images[]', image);
+                data.images.forEach((image) => {
+                  formData.append("images[]", image);
                 });
               }
-              await axios.post(`${API_URL}/products`, formData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
+              await adminApiClient.post(`/products`, formData, {
+                headers: { "Content-Type": "multipart/form-data" },
               });
               setSuccessMessage("تم إضافة المنتج بنجاح");
               fetchProducts();
@@ -157,20 +178,21 @@ export default function Products() {
           onSubmit={async (data) => {
             try {
               const formData = new FormData();
-              formData.append('_method', 'PUT');
-              formData.append('title', data.title);
-              formData.append('description', data.description);
-              formData.append('price', data.price);
-              formData.append('stock', data.stock);
-              formData.append('category_id', data.category_id);
+              formData.append("title", data.title);
+              formData.append("description", data.description);
+              formData.append("price", data.price);
+              formData.append("stock", data.stock);
+              formData.append("category_id", data.category_id);
               if (data.images && data.images.length > 0) {
-                data.images.forEach(image => {
-                  formData.append('images[]', image);
+                data.images.forEach((image) => {
+                  formData.append("images[]", image);
                 });
               }
-              await axios.post(`${API_URL}/products/${selectedProduct.id}`, formData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
-              });
+              await adminApiClient.put(
+                `/products/${selectedProduct.id}`,
+                formData,
+                { headers: { "Content-Type": "multipart/form-data" } }
+              );
               setSuccessMessage("تم تحديث المنتج بنجاح");
               fetchProducts();
               closeModals();
@@ -211,43 +233,91 @@ function ProductModal({ title, product = {}, categories = [], onClose, onSubmit 
   };
 
   return (
-    <div className="modal fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
-      <div className="modal-content bg-white p-6 rounded w-[90%] max-w-2xl max-h-[90vh] overflow-y-auto">
-        <button className="float-right text-xl" onClick={onClose}>&times;</button>
+    <div className="modal fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+      <div className="modal-content bg-white p-6 rounded w-[90%] max-w-2xl max-h-[90vh] overflow-y-auto relative">
+        <button
+          className="absolute top-2 right-2 text-xl font-bold"
+          onClick={onClose}
+          aria-label="Close modal"
+        >
+          &times;
+        </button>
         <h2 className="text-xl font-bold mb-4">{title}</h2>
         <form onSubmit={handleSubmit}>
           <div className="form-group mb-2">
             <label>Product Title</label>
-            <input type="text" name="title" value={form.title} onChange={handleChange} className="form-control w-full" required />
+            <input
+              type="text"
+              name="title"
+              value={form.title}
+              onChange={handleChange}
+              className="form-control w-full"
+              required
+            />
           </div>
           <div className="form-group mb-2">
             <label>Description</label>
-            <textarea name="description" value={form.description} onChange={handleChange} className="form-control w-full" />
+            <textarea
+              name="description"
+              value={form.description}
+              onChange={handleChange}
+              className="form-control w-full"
+            />
           </div>
           <div className="form-group mb-2">
             <label>Price</label>
-            <input type="number" name="price" value={form.price} onChange={handleChange} className="form-control w-full" step="0.01" required />
+            <input
+              type="number"
+              name="price"
+              value={form.price}
+              onChange={handleChange}
+              className="form-control w-full"
+              step="0.01"
+              required
+            />
           </div>
           <div className="form-group mb-2">
             <label>Stock</label>
-            <input type="number" name="stock" value={form.stock} onChange={handleChange} className="form-control w-full" />
+            <input
+              type="number"
+              name="stock"
+              value={form.stock}
+              onChange={handleChange}
+              className="form-control w-full"
+            />
           </div>
           <div className="form-group mb-2">
             <label>Category</label>
-            <select name="category_id" value={form.category_id} onChange={handleChange} className="form-control w-full">
+            <select
+              name="category_id"
+              value={form.category_id}
+              onChange={handleChange}
+              className="form-control w-full"
+            >
               <option value="">No Category</option>
               {categories.map((cat) => (
-                <option key={cat.id} value={cat.id}>{cat.name}</option>
+                <option key={cat.id} value={cat.id}>
+                  {cat.name}
+                </option>
               ))}
             </select>
           </div>
           <div className="form-group mb-2">
             <label>Images</label>
-            <input type="file" name="images" onChange={handleChange} multiple className="form-control w-full" />
+            <input
+              type="file"
+              name="images"
+              onChange={handleChange}
+              multiple
+              className="form-control w-full"
+            />
           </div>
-          <button type="submit" className="btn-submit mt-2">{product.id ? "Update" : "Save"}</button>
+          <button type="submit" className="btn-submit mt-2">
+            {product.id ? "Update" : "Save"}
+          </button>
         </form>
       </div>
     </div>
   );
 }
+console.log("Products.jsx loaded")

@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
 import { Link } from "react-router-dom";
-import { API_URL } from "../../constant/api";
+import adminApiClient from "../../services/adminApiClient";
 
 function Dashboard() {
   const [stats, setStats] = useState({
@@ -23,7 +22,7 @@ function Dashboard() {
   const fetchDashboardStats = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API_URL}/dashboard/stats`);
+      const response = await adminApiClient.get(`/dashboard/stats`);
       setStats(response.data);
       setLoading(false);
     } catch (error) {
