@@ -1,8 +1,36 @@
-import React from "react";
-import { motion } from "framer-motion";
-import { products } from "../constant/dataHome";
+import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import axios from 'axios';
 
 const AllProducts = ({ handleProductClick, handleAddToCart }) => {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await axios.get('http://localhost:8000/api/frontend/products');
+        setProducts(response.data.data);
+        setLoading(false);
+      } catch (err) {
+        setError('Failed to load products.');
+        setLoading(false);
+        console.error(err);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div className="text-red-500">{error}</div>;
+  }
+
   return (
     <div>
       <h2 className="text-3xl font-bold mb-8 text-gray-800">All Products</h2>
@@ -18,7 +46,7 @@ const AllProducts = ({ handleProductClick, handleAddToCart }) => {
           >
             <div className="relative">
               <img
-                src={product.image}
+                src={product.image_url}
                 alt={product.name}
                 className="w-full h-48 object-cover"
               />

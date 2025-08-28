@@ -1,64 +1,78 @@
-
 @extends('layouts.admin')
 @section('content')
     <h1>🛒 Orders Management</h1>
-    
+
     @if(session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
-    
+
     <table class="styled-table">
-        <tr>
-            <th>ID</th><th>Customer</th><th>Product</th><th>Quantity</th><th>Status</th><th>Actions</th>
-        </tr>
-        @foreach($orders as $o)
+        <thead>
             <tr>
-                <td>{{ $o->id }}</td>
-                <td>{{ $o->user->name ?? 'Guest' }}</td>
-                <td>{{ $o->product_name ?? '-' }}</td>
-                <td>{{ $o->quantity }}</td>
-                <td>{{ $o->status }}</td>
-                <td>
-                    <a href="#" class="btn-edit" onclick="openModal('editOrderModal{{ $o->id }}')">✏️ Edit Status</a>
-                </td>
+                <th>ID</th>
+                <th>Customer</th>
+                <th>Products</th>
+                <th>Total</th>
+                <th>Status</th>
+                <th>Order Date</th>
+                <th>Actions</th>
             </tr>
-        @endforeach
+        </thead>
+        <tbody>
+            @foreach($orders as $order)
+                <tr>
+                    <td>{{ $order->id }}</td>
+                    <td>{{ $order->customer_name }} <br> <small>{{ $order->email }}</small></td>
+                    <td>
+                        <ul style="list-style: none; padding: 0;">
+                            @foreach($order->orderItems as $item)
+                                <li>{{ $item->product->title ?? 'Product not found' }} (x{{ $item->quantity }}) -
+                                    ${{ number_format($item->price * $item->quantity, 2) }}</li>
+                            @endforeach
+                        </ul>
+                    </td>
+                    <td>${{ number_format($order->total, 2) }}</td>
+                    <td>{{ $order->status }}</td>
+                    <td>{{ $order->created_at->format('Y-m-d H:i') }}</td>
+                    <td>
+                        <a href="#" class="btn-edit"
+                            onclick="event.preventDefault(); openModal('editOrderModal{{ $order->id }}')">✏️ Edit Status</a>
+                    </td>
+                </tr>
+            @endforeach
+        </tbody>
     </table>
-    
+
     <!-- Edit Order Status Modals -->
-    @foreach($orders as $o)
-    <div id="editOrderModal{{ $o->id }}" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeModal('editOrderModal{{ $o->id }}')">&times;</span>
-            <h2>Edit Order Status</h2>
-            <form method="POST" action="{{ route('admin.orders.update', $o->id) }}">
-                @csrf
-                @method('PUT')
-                <div class="form-group">
-                    <label for="status">Order Status</label>
-                    <select id="status" name="status" class="form-control" required>
-                        <option value="pending" {{ $o->status == 'pending' ? 'selected' : '' }}>Pending</option>
-                        <option value="processing" {{ $o->status == 'processing' ? 'selected' : '' }}>Processing</option>
-                        <option value="shipped" {{ $o->status == 'shipped' ? 'selected' : '' }}>Shipped</option>
-                        <option value="delivered" {{ $o->status == 'delivered' ? 'selected' : '' }}>Delivered</option>
-                        <option value="cancelled" {{ $o->status == 'cancelled' ? 'selected' : '' }}>Cancelled</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Customer:</label>
-                    <p>{{ $o->user->name ?? 'Guest' }}</p>
-                </div>
-                <div class="form-group">
-                    <label>Product:</label>
-                    <p>{{ $o->product_name ?? '-' }}</p>
-                </div>
-                <div class="form-group">
-                    <label>Quantity:</label>
-                    <p>{{ $o->quantity }}</p>
-                </div>
-                <button type="submit" class="btn-submit">Update Status</button>
-            </form>
+    @foreach($orders as $order)
+        <div id="editOrderModal{{ $order->id }}" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="closeModal('editOrderModal{{ $order->id }}')">&times;</span>
+                <h2>Edit Order Status for Order #{{ $order->id }}</h2>
+                <form method="POST" action="{{ route('admin.orders.update', $order->id) }}">
+                    @csrf
+                    @method('PUT')
+                    <div class="form-group">
+                        <label>Customer:</label>
+                        <p>{{ $order->customer_name }}</p>
+                    </div>
+                    <div class="form-group">
+                        <label>Total:</label>
+                        <p>${{ number_format($order->total, 2) }}</p>
+                    </div>
+                    <div class="form-group">
+                        <label for="status">Order Status</label>
+                        <select id="status" name="status" class="form-control" required>
+                            <option value="pending" {{ $order->status == 'pending' ? 'selected' : '' }}>Pending</option>
+                            <option value="processing" {{ $order->status == 'processing' ? 'selected' : '' }}>Processing</option>
+                            <option value="shipped" {{ $order->status == 'shipped' ? 'selected' : '' }}>Shipped</option>
+                            <option value="delivered" {{ $order->status == 'delivered' ? 'selected' : '' }}>Delivered</option>
+                            <option value="cancelled" {{ $order->status == 'cancelled' ? 'selected' : '' }}>Cancelled</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-submit">Update Status</button>
+                </form>
+            </div>
         </div>
-    </div>
     @endforeach
 @endsection

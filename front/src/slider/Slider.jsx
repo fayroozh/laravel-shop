@@ -44,7 +44,7 @@ export default function Slider() {
           disableOnInteraction: false,
         }}
         spaceBetween={30}
-        loop={true}
+        loop={products.length >= 3}
         speed={800}
         breakpoints={{
           320: {
@@ -77,7 +77,7 @@ export default function Slider() {
                 <div className="relative h-48 md:h-64 w-full overflow-hidden">
                   <motion.img
                     className="absolute inset-0 w-full h-full object-cover transition-transform duration-300"
-                    src={product.thumbnail}
+                    src={product.image_url}
                     alt={product.title}
                     loading="lazy"
                     whileHover={{ scale: 1.05 }}

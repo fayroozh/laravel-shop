@@ -1,46 +1,32 @@
 // hooks/useProduct.js
 import { useState, useEffect } from "react";
-import axios from "axios"; 
-import { apiClient } from '../services/api-client'; // استيراد apiClient المكون مسبقاً
+import { apiClient } from "../services/api-client"; 
 
-export const useProduct = () => {
-  const [data, setData] = useState([]);      
-  const [loading, setLoading] = useState(true); 
-  const [error, setError] = useState(null);    
+export const useProduct = (searchQuery = "") => {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchProducts = async () => {
+      setLoading(true);
       try {
-        setLoading(true); 
-        setError(null);   
-
-        // استخدام apiClient بدلاً من axios مباشرة
-        const response = await apiClient.get('/frontend/products'); // إزالة /api المكرر
-        
-        // التحقق من هيكل البيانات والتعامل معه بشكل صحيح
-        if (response.data && response.data.products) {
-          // إذا كانت البيانات تأتي بتنسيق { products: [...] }
-          setData(response.data.products);
-        } else if (Array.isArray(response.data)) {
-          // إذا كانت البيانات مصفوفة مباشرة
-          setData(response.data);
-        } else {
-          // إذا كان هناك هيكل آخر غير متوقع
-          console.warn("Unexpected data structure:", response.data);
-          setData([]);
+        const params = {};
+        if (searchQuery) {
+          params.search = searchQuery;
         }
-        
-        console.log("Products fetched successfully:", response.data);
+        const response = await apiClient.get("/frontend/products", { params });
+        setData(response.data);
       } catch (err) {
-        console.error("Error fetching products:", err);
-        setError(err); 
+        setError(err);
+        console.error("Failed to fetch products:", err);
       } finally {
-        setLoading(false); 
+        setLoading(false);
       }
     };
 
-    fetchProducts(); 
-  }, []); 
+    fetchProducts();
+  }, [searchQuery]);
 
   return { data, loading, error };
 };

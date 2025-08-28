@@ -1,160 +1,106 @@
 @extends('layouts.admin')
 
 @section('content')
-<div class="breadcrumb">
-    <div class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></div>
-    <div class="breadcrumb-item"><a href="{{ route('admin.reports.index') }}">Reports</a></div>
-    <div class="breadcrumb-item active">{{ $reportTitle ?? 'Inventory Report' }}</div>
-</div>
-<div class="dashboard-header">
-    <h1>📦 Inventory Reports</h1>
-    <div class="dashboard-actions">
-        <button class="btn-export" onclick="exportReport('pdf')">📄 Export PDF</button>
-        <button class="btn-export" onclick="exportReport('excel')">📊 Export Excel</button>
+    <div class="breadcrumb">
+        <div class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></div>
+        <div class="breadcrumb-item"><a href="{{ route('admin.reports.index') }}">Reports</a></div>
+        <div class="breadcrumb-item active">Inventory Report</div>
     </div>
-</div>
 
-<!-- Advanced Search -->
-<div class="search-section card">
-    <form action="{{ route('admin.reports.inventory') }}" method="GET" class="search-form">
-        <div class="search-fields">
-            <div class="form-group">
-                <label>Category</label>
-                <select name="category" class="form-control">
-                    <option value="">All Categories</option>
-                    @foreach($categories ?? [] as $category)
-                        <option value="{{ $category->id }}" {{ request('category') == $category->id ? 'selected' : '' }}>
-                            {{ $category->name }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Stock Level</label>
-                <select name="stock_level" class="form-control">
-                    <option value="">All Levels</option>
-                    <option value="low" {{ request('stock_level') == 'low' ? 'selected' : '' }}>Low Stock</option>
-                    <option value="normal" {{ request('stock_level') == 'normal' ? 'selected' : '' }}>Normal</option>
-                    <option value="high" {{ request('stock_level') == 'high' ? 'selected' : '' }}>High Stock</option>
-                </select>
-            </div>
-            <button type="submit" class="btn btn-primary">🔍 Search</button>
+    <div class="dashboard-header">
+        <h1>📦 Inventory Report</h1>
+        <div class="dashboard-actions">
+            <button class="btn-export" onclick="exportReport('pdf')">📄 Export PDF</button>
+            <button class="btn-export" onclick="exportReport('excel')">📊 Export Excel</button>
         </div>
-    </form>
-</div>
-
-<!-- Interactive Charts -->
-<div class="charts-grid">
-    <div class="chart-card">
-        <h3>Stock Level Distribution</h3>
-        <canvas id="stockDistributionChart" height="250"></canvas>
     </div>
-    <div class="chart-card">
-        <h3>Stock Movement Trends</h3>
-        <canvas id="stockMovementChart" height="250"></canvas>
-    </div>
-</div>
 
-<!-- Data Table -->
-<div class="card data-table">
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Product</th>
-                <th>Category</th>
-                <th>Current Stock</th>
-                <th>Status</th>
-                <th>Last Updated</th>
-            </tr>
-        </thead>
-        <tbody>
-            @forelse($products ?? [] as $product)
-            <tr>
-                <td>{{ $product->title }}</td>
-                <td>{{ $product->category->name ?? 'Uncategorized' }}</td>
-                <td>{{ $product->stock }}</td>
-                <td>
-                    <span class="badge 
-                        @if($product->stock_status == 'low') badge-danger
-                        @elseif($product->stock_status == 'normal') badge-primary
-                        @else badge-success
-                        @endif">
-                        {{ ucfirst($product->stock_status) }}
-                    </span>
-                </td>
-                <td>{{ $product->updated_at ? $product->updated_at->format('Y-m-d H:i') : 'N/A' }}</td>
-            </tr>
-            @empty
-            <tr>
-                <td colspan="5" class="text-center">No products found</td>
-            </tr>
-            @endforelse
-        </tbody>
-    </table>
-    @if($products instanceof \Illuminate\Pagination\LengthAwarePaginator)
-        <div class="mt-3">
-            {{ $products->links() }}
+    <!-- Inventory Stats -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-title">Total Products</div>
+            <div class="stat-number">{{ $totalProducts }}</div>
         </div>
-    @endif
-</div>
+        <div class="stat-card">
+            <div class="stat-title">Total Stock Units</div>
+            <div class="stat-number">{{ $totalStock }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-title">Total Stock Value</div>
+            <div class="stat-number">${{ number_format($totalStockValue, 2) }}</div>
+        </div>
+    </div>
+
+    <!-- Chart and Lists -->
+    <div class="reports-grid">
+        <div class="chart-card">
+            <h3>Stock by Category</h3>
+            <canvas id="stockByCategoryChart"></canvas>
+        </div>
+        <div class="list-card">
+            <h3>Low Stock Products (Less than 10)</h3>
+            <ul class="report-list">
+                @forelse($lowStockProducts as $product)
+                    <li>
+                        <span class="product-title">{{ $product->title }}</span>
+                        <span class="product-quantity">{{ $product->stock }} units</span>
+                    </li>
+                @empty
+                    <li>All products have sufficient stock.</li>
+                @endforelse
+            </ul>
+        </div>
+    </div>
+
+    <div class="reports-grid" style="margin-top: 20px;">
+        <div class="list-card full-width">
+            <h3>Out of Stock Products</h3>
+            <ul class="report-list">
+                @forelse($outOfStockProducts as $product)
+                    <li>
+                        <span class="product-title">{{ $product->title }}</span>
+                    </li>
+                @empty
+                    <li>No products are out of stock.</li>
+                @endforelse
+            </ul>
+        </div>
+    </div>
+@endsection
 
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    function exportReport(format) {
-        // Implement export functionality
-        alert(`Exporting to ${format} will be implemented here`);
-    }
+    document.addEventListener('DOMContentLoaded', function () {
+        // Stock by Category Chart
+        const stockByCategoryData = {!! json_encode($stockByCategory) !!};
+        const categoryLabels = stockByCategoryData.map(item => item.name);
+        const categoryStock = stockByCategoryData.map(item => item.stock);
 
-    // Initialize charts only if elements exist
-    document.addEventListener('DOMContentLoaded', function() {
-        const stockDistributionCtx = document.getElementById('stockDistributionChart');
-        if (stockDistributionCtx) {
-            new Chart(stockDistributionCtx, {
-                type: 'pie',
-                data: {
-                    labels: ['Low Stock', 'Normal', 'High Stock'],
-                    datasets: [{
-                        data: [
-                            {{ $lowStock ?? 0 }}, 
-                            {{ $normalStock ?? 0 }}, 
-                            {{ $highStock ?? 0 }}
-                        ],
-                        backgroundColor: ['#e74c3c', '#3498db', '#2ecc71']
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false
-                }
-            });
-        }
-
-        const stockMovementCtx = document.getElementById('stockMovementChart');
-        if (stockMovementCtx) {
-            new Chart(stockMovementCtx, {
-                type: 'line',
-                data: {
-                    labels: {!! json_encode($movementDates ?? []) !!},
-                    datasets: [{
-                        label: 'Stock Movement',
-                        data: {!! json_encode($movementCounts ?? []) !!},
-                        borderColor: '#3498db',
-                        fill: false
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
-                    }
-                }
-            });
-        }
+        new Chart(document.getElementById('stockByCategoryChart'), {
+            type: 'doughnut',
+            data: {
+                labels: categoryLabels,
+                datasets: [{
+                    label: 'Stock Quantity',
+                    data: categoryStock,
+                    backgroundColor: [
+                        '#3498db', '#e74c3c', '#2ecc71', '#f1c40f', '#9b59b6',
+                        '#34495e', '#1abc9c', '#e67e22', '#d35400', '#c0392b'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
     });
+
+    function exportReport(format) {
+        // Adjust the URL as needed for your export logic
+        const url = "{{ route('admin.reports.export', ['type' => 'inventory', 'format' => '__FORMAT__']) }}".replace('__FORMAT__', format);
+        window.location.href = url;
+    }
 </script>
 @endpush
-@endsection

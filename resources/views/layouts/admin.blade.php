@@ -1,9 +1,10 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr">
+<html lang="en" dir="ltr" data-theme="{{ $theme ?? 'light' }}">
 
 <head>
     <meta charset="UTF-8">
-    <title>Admin Dashboard</title>
+    <title>BRIFKTHAR</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/logo.png') }}">
     <style>
         :root {
             --primary-color: #2c3e50;
@@ -1980,49 +1981,16 @@
             border-top: 1px solid var(--border-color);
         }
     </style>
-
 </head>
 
 <body>
-    <!-- 🎨 Theme Customizer -->
-    <div class="theme-customizer" id="themeCustomizer">
-        <div class="customizer-toggle" onclick="toggleCustomizer()">
-            <i>🎨</i>
-        </div>
-        <h3>Theme Settings</h3>
 
-        <!-- Theme Mode -->
-        <div class="theme-mode">
-            <h4>Mode</h4>
-            <div class="form-check">
-                <input type="radio" name="theme-mode" id="lightMode" checked onclick="setThemeMode('light')">
-                <label for="lightMode">Light Mode</label>
-            </div>
-            <div class="form-check">
-                <input type="radio" name="theme-mode" id="darkMode" onclick="setThemeMode('dark')">
-                <label for="darkMode">Dark Mode</label>
-            </div>
-        </div>
-
-        <!-- Color Settings -->
-        <div class="color-customizer">
-            <h4>Colors</h4>
-            <div class="color-option">
-                <div class="color-preview" style="background-color: var(--accent-color);"></div>
-                <label>Accent Color</label>
-                <input type="color" id="accentColor" value="#3498db" onchange="updateColor('accent-color', this.value)">
-            </div>
-        </div>
-
-        <button class="btn-submit" onclick="saveThemeSettings()">Save Settings</button>
-    </div>
-
-    <!-- 🧭 Sidebar -->
+    <!-- Sidebar -->
     <div class="sidebar">
         <h2>👑 Admin Dashboard</h2>
         <a href="{{ route('admin.dashboard') }}">📊 Statistics</a>
         <a href="{{ route('admin.products') }}">📦 Products</a>
-        <a href="{{ route('admin.categories') }}">🗂️ Categories</a>
+        <a href="{{ route('admin.categories') }}">🗂 Categories</a>
         <a href="{{ route('admin.employees') }}">👥 Employees</a>
         <a href="{{ route('admin.suppliers') }}">🏭 Suppliers</a>
         <a href="{{ route('admin.orders') }}">🛒 Orders</a>
@@ -2032,14 +2000,12 @@
         <a href="{{ route('admin.activities') }}">🕒 Activities</a>
         <a href="{{ route('admin.reports.index') }}">📈 Reports</a>
         <a href="{{ route('admin.roles.index') }}">🔐 Roles</a>
-
-        <!-- Dark/Light Theme Toggle -->
         <div class="theme-toggle-container">
-            <button onclick="toggleTheme()" class="btn-theme" id="themeToggle">🌙 Dark Mode</button>
+            <button onclick="toggleTheme()" id="themeToggle">🌙 Dark Mode</button>
         </div>
     </div>
 
-    <!-- 🔔 Top Bar Notifications -->
+    <!-- Topbar -->
     <div class="top-bar">
         <div class="notification-dropdown">
             <button class="notification-btn" id="notificationBtn">
@@ -2057,219 +2023,119 @@
         </div>
     </div>
 
-    <!-- 📄 Main Content -->
+    <!-- Content -->
     <div class="content">
         @yield('content')
     </div>
 
-    @push('scripts')
-        <script>
-            // ================================
-            // 🔔 Notifications Handling
-            // ================================
-            document.addEventListener('DOMContentLoaded', function () {
-                updateNotificationCount();
-                setInterval(updateNotificationCount, 30000);
+    <!-- Theme Customizer -->
+    <div class="theme-customizer" id="themeCustomizer">
+        <div class="customizer-toggle" onclick="toggleCustomizer()">🎨</div>
+        <h3>Theme Settings</h3>
+        <div class="theme-mode">
+            <h4>Mode</h4>
+            <div class="form-check">
+                <input type="radio" name="theme-mode" id="lightMode" checked onclick="setThemeMode('light')">
+                <label for="lightMode">Light Mode</label>
+            </div>
+            <div class="form-check">
+                <input type="radio" name="theme-mode" id="darkMode" onclick="setThemeMode('dark')">
+                <label for="darkMode">Dark Mode</label>
+            </div>
+        </div>
+        <div class="color-customizer">
+            <h4>Colors</h4>
+            <div class="color-option">
+                <div class="color-preview" style="background-color: var(--accent-color);"></div>
+                <label>Accent Color</label>
+                <input type="color" id="accentColor" value="#3498db" onchange="updateColor('accent-color', this.value)">
+            </div>
+            <div class="color-option">
+                <div class="color-preview" style="background-color: var(--primary-color);"></div>
+                <label>Primary Color</label>
+                <input type="color" id="primaryColor" value="#0d6efd"
+                    onchange="updateColor('primary-color', this.value)">
+            </div>
+        </div>
+        <button onclick="saveThemeSettings()">Save Settings</button>
+    </div>
 
-                const notificationBtn = document.getElementById('notificationBtn');
-                const notificationDropdown = document.getElementById('notificationDropdown');
+    <!-- Example modal -->
+    <div class="modal" id="exampleModal">
+        <div class="modal-content">
+            <h3>Modal Example</h3>
+            <input type="text" placeholder="Type something...">
+            <button onclick="closeModal('exampleModal')">Close</button>
+        </div>
+    </div>
 
-                if (notificationBtn) {
-                    notificationBtn.addEventListener('click', function () {
-                        notificationDropdown.classList.toggle('show');
-                        if (notificationDropdown.classList.contains('show')) {
-                            loadLatestNotifications();
-                        }
-                    });
-                }
+    <script>
+        // ======================
+        // Notifications
+        // ======================
+        function updateNotificationCount() {
+            fetch('{{ route("admin.notifications.unreadCount") }}').then(r => r.json()).then(data => {
+                const el = document.getElementById('notificationCount');
+                if (el) { el.textContent = data.count; el.style.display = data.count > 0 ? 'flex' : 'none'; }
+            }).catch(console.error);
+        }
 
-                // Hide dropdown on outside click
-                window.addEventListener('click', function (event) {
-                    if (!event.target.matches('.notification-btn') &&
-                        !event.target.closest('.notification-dropdown-content')) {
-                        notificationDropdown?.classList.remove('show');
-                    }
+        function loadLatestNotifications() {
+            fetch('{{ route("admin.notifications.latest") }}').then(r => r.json()).then(notifications => {
+                const container = document.getElementById('notificationItems'); if (!container) return;
+                if (notifications.length === 0) { container.innerHTML = '<div class="empty-notification">No new notifications</div>'; return; }
+                container.innerHTML = '';
+                notifications.forEach(n => {
+                    let icon = '🔔', title = n.data.title || 'System Notification', link = '{{ route("admin.notifications.index") }}';
+                    if (n.type === 'low_stock') { icon = '📦'; title = `Low Stock: ${n.data.product_title}`; link = '{{ route("admin.products") }}'; }
+                    if (n.type === 'new_order') { icon = '🛒'; title = `New Order: #${n.data.order_id}`; link = '{{ route("admin.orders") }}'; }
+                    container.innerHTML += `<a href="${link}" class="notification-item-mini ${!n.read_at ? 'unread' : ''}"><div>${icon}</div><div>${title}</div></a>`;
                 });
-            });
+            }).catch(console.error);
+        }
 
-            function updateNotificationCount() {
-                fetch('{{ route("admin.notifications.unreadCount") }}')
-                    .then(response => response.json())
-                    .then(data => {
-                        const countElement = document.getElementById('notificationCount');
-                        if (countElement) {
-                            countElement.textContent = data.count;
-                            countElement.style.display = (data.count > 0 ? 'flex' : 'none');
-                        }
-                    })
-                    .catch(console.error);
-            }
+        document.addEventListener('DOMContentLoaded', () => {
+            updateNotificationCount();
+            setInterval(updateNotificationCount, 30000);
+            const btn = document.getElementById('notificationBtn');
+            const dd = document.getElementById('notificationDropdown');
+            if (btn) btn.addEventListener('click', () => { dd.classList.toggle('show'); if (dd.classList.contains('show')) loadLatestNotifications(); });
+            window.addEventListener('click', e => { if (!e.target.matches('.notification-btn') && !e.target.closest('.notification-dropdown-content')) dd?.classList.remove('show'); });
+        });
 
-            function loadLatestNotifications() {
-                fetch('{{ route("admin.notifications.latest") }}')
-                    .then(response => response.json())
-                    .then(notifications => {
-                        const container = document.getElementById('notificationItems');
-                        if (!container) return;
+        // ======================
+        // Theme
+        // ======================
+        function toggleTheme() { document.body.classList.toggle('dark-theme'); const t = document.getElementById('themeToggle'); if (document.body.classList.contains('dark-theme')) { t.textContent = '☀ Light Mode'; localStorage.setItem('theme', 'dark'); document.getElementById('darkMode').checked = true; } else { t.textContent = '🌙 Dark Mode'; localStorage.setItem('theme', 'light'); document.getElementById('lightMode').checked = true; } }
+        function toggleCustomizer() { document.getElementById('themeCustomizer').classList.toggle('open'); }
+        function setThemeMode(mode) { if (mode === 'dark' && !document.body.classList.contains('dark-theme')) toggleTheme(); if (mode === 'light' && document.body.classList.contains('dark-theme')) toggleTheme(); }
+        function updateColor(property, value) { document.documentElement.style.setProperty(`--${property}`, value); }
+        function saveThemeSettings() { localStorage.setItem('accent-color', document.getElementById('accentColor').value); localStorage.setItem('primary-color', document.getElementById('primaryColor').value); alert('Theme settings saved!'); }
 
-                        if (notifications.length === 0) {
-                            container.innerHTML = '<div class="empty-notification">No new notifications</div>';
-                            return;
-                        }
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark') { document.body.classList.add('dark-theme'); document.getElementById('themeToggle').textContent = '☀ Light Mode'; document.getElementById('darkMode').checked = true; }
+            const savedAccent = localStorage.getItem('accent-color'); if (savedAccent) { document.documentElement.style.setProperty('--accent-color', savedAccent); document.getElementById('accentColor').value = savedAccent; }
+            const savedPrimary = localStorage.getItem('primary-color'); if (savedPrimary) { document.documentElement.style.setProperty('--primary-color', savedPrimary); document.getElementById('primaryColor').value = savedPrimary; }
+        });
 
-                        container.innerHTML = '';
-                        notifications.forEach(notification => {
-                            let icon = '🔔', title = notification.data.title || 'System Notification',
-                                link = '{{ route("admin.notifications.index") }}';
+        // ======================
+        // Modals
+        // ======================
+        window.openModal = function (id) { const m = document.getElementById(id); if (!m) return; m.classList.add('show'); document.body.style.overflow = 'hidden'; setTimeout(() => { const f = m.querySelector('input, select, textarea'); if (f) f.focus(); }, 100); }
+        window.closeModal = function (id) { const m = document.getElementById(id); if (!m) return; m.classList.remove('show'); document.body.style.overflow = ''; }
+        document.addEventListener('click', e => { if (e.target.classList.contains('modal')) window.closeModal(e.target.id); });
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') document.querySelectorAll('.modal.show').forEach(m => window.closeModal(m.id)); });
 
-                            if (notification.type === 'low_stock') {
-                                icon = '📦';
-                                title = `Low Stock: ${notification.data.product_title}`;
-                                link = '{{ route("admin.products") }}';
-                            } else if (notification.type === 'new_order') {
-                                icon = '🛒';
-                                title = `New Order: #${notification.data.order_id}`;
-                                link = '{{ route("admin.orders") }}';
-                            }
-
-                            container.innerHTML += `
-                            <a href="${link}" class="notification-item-mini ${!notification.read_at ? 'unread' : ''}">
-                                <div class="notification-icon-mini">${icon}</div>
-                                <div class="notification-content-mini">
-                                    <div class="notification-title-mini">${title}</div>
-                                    <div class="notification-time-mini">${notification.created_at}</div>
-                                </div>
-                            </a>`;
-                        });
-                    })
-                    .catch(console.error);
-            }
-
-            // ================================
-            // 🎨 Theme Functions
-            // ================================
-            function toggleTheme() {
-                document.body.classList.toggle('dark-theme');
-                const themeToggle = document.getElementById('themeToggle');
-                const isDark = document.body.classList.contains('dark-theme');
-
-                themeToggle.textContent = isDark ? '☀️ Light Mode' : '🌙 Dark Mode';
-                localStorage.setItem('theme', isDark ? 'dark' : 'light');
-
-                document.getElementById(isDark ? 'darkMode' : 'lightMode').checked = true;
-            }
-
-            document.addEventListener('DOMContentLoaded', function () {
-                const savedTheme = localStorage.getItem('theme');
-                if (savedTheme === 'dark') {
-                    document.body.classList.add('dark-theme');
-                    document.getElementById('themeToggle').textContent = '☀️ Light Mode';
-                    document.getElementById('darkMode').checked = true;
-                }
-
-                const savedAccentColor = localStorage.getItem('accent-color');
-                if (savedAccentColor) {
-                    document.documentElement.style.setProperty('--accent-color', savedAccentColor);
-                    document.getElementById('accentColor').value = savedAccentColor;
-                }
-            });
-
-            function toggleCustomizer() {
-                document.getElementById('themeCustomizer').classList.toggle('open');
-            }
-
-            function setThemeMode(mode) {
-                if (mode === 'dark' && !document.body.classList.contains('dark-theme')) toggleTheme();
-                if (mode === 'light' && document.body.classList.contains('dark-theme')) toggleTheme();
-            }
-
-            function updateColor(property, value) {
-                document.documentElement.style.setProperty(`--${property}`, value);
-            }
-
-            function saveThemeSettings() {
-                localStorage.setItem('accent-color', document.getElementById('accentColor').value);
-                alert('Theme settings saved!');
-            }
-
-            // ================================
-            // 📦 Modal Functions
-            // ================================
-            function openModal(modalId) {
-                const modal = document.getElementById(modalId);
-                if (!modal) return;
-
-                modal.classList.add('show');
-                document.body.style.overflow = 'hidden';
-
-                setTimeout(() => {
-                    const firstInput = modal.querySelector('input, select, textarea');
-                    if (firstInput) firstInput.focus();
-                }, 100);
-            }
-
-            function closeModal(modalId) {
-                const modal = document.getElementById(modalId);
-                if (modal) {
-                    modal.classList.remove('show');
-                    document.body.style.overflow = '';
-                }
-            }
-
-            document.addEventListener('click', function (event) {
-                if (event.target.classList.contains('modal')) closeModal(event.target.id);
-            });
-
-            document.addEventListener('keydown', function (event) {
-                if (event.key === 'Escape') {
-                    document.querySelectorAll('.modal.show').forEach(modal => closeModal(modal.id));
-                }
-            });
-
-            // ================================
-            // 🖥️ SPA-Like Navigation
-            // ================================
-            function loadPage(url, element) {
-                document.querySelector('.content').style.opacity = '0.7';
-
-                fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
-                    .then(response => response.text())
-                    .then(html => {
-                        const doc = new DOMParser().parseFromString(html, 'text/html');
-                        const newContent = doc.querySelector('.content');
-                        if (newContent) document.querySelector('.content').innerHTML = newContent.innerHTML;
-
-                        history.pushState(null, '', url);
-                        document.querySelector('.content').style.opacity = '1';
-
-                        document.querySelectorAll('.sidebar a').forEach(link => link.classList.remove('active'));
-                        element.classList.add('active');
-                    })
-                    .catch(() => window.location.href = url);
-            }
-
-            document.addEventListener('DOMContentLoaded', function () {
-                document.querySelectorAll('.sidebar a').forEach(link => {
-                    link.addEventListener('click', function (e) {
-                        e.preventDefault();
-                        loadPage(this.href, this);
-                    });
-                });
-            });
-
-            window.addEventListener('popstate', function () {
-                fetch(window.location.pathname)
-                    .then(response => response.text())
-                    .then(html => {
-                        document.querySelector('.content').innerHTML = html;
-                    });
-            });
-        </script>
-    @endpush
-
-
-
-
+        // ======================
+        // SPA Navigation
+        // ======================
+        function loadPage(url, element) { document.querySelector('.content').style.opacity = '0.7'; fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } }).then(r => r.text()).then(html => { const parser = new DOMParser(); const doc = parser.parseFromString(html, 'text/html'); const c = doc.querySelector('.content'); if (c) document.querySelector('.content').innerHTML = c.innerHTML; history.pushState(null, '', url); document.querySelector('.content').style.opacity = '1'; document.querySelectorAll('.sidebar a').forEach(l => l.classList.remove('active')); element.classList.add('active'); }).catch(() => window.location.href = url); }
+        document.addEventListener('DOMContentLoaded', () => { document.querySelectorAll('.sidebar a').forEach(l => l.addEventListener('click', function (e) { e.preventDefault(); loadPage(this.href, this); })); });
+        window.addEventListener('popstate', () => { fetch(window.location.pathname).then(r => r.text()).then(html => { document.querySelector('.content').innerHTML = html; }); });
+    </script>
+    <script src="{{ asset('js/admin.js') }}"></script>
+    @stack('scripts')
 </body>
 
 </html>

@@ -72,10 +72,10 @@
                 </div>
                 <div class="form-group">
                     <label>Role</label>
-                    <select name="role_id" class="form-control" required id="addRoleSelect">
+                    <select name="role" class="form-control" required id="addRoleSelect">
                         <option value="">Select Role</option>
                         @foreach($roles as $role)
-                            <option value="{{ $role->id }}" @if($role->name === 'employee') data-is-employee="true" @endif>
+                            <option value="{{ $role->name }}" @if($role->name === 'employee') data-is-employee="true" @endif>
                                 {{ $role->display_name }}
                             </option>
                         @endforeach
@@ -94,7 +94,7 @@
                     </div>
                     <div class="form-group">
                         <label>Phone</label>
-                        <input type="text" name="phone" class="form-control">
+                        <input type="text" name="mobile" class="form-control">
                     </div>
                 </div>
 
@@ -131,11 +131,11 @@
                     </div>
                     <div class="form-group">
                         <label>Role</label>
-                        <select id="editRoleSelect{{ $user->id }}" name="role_id" class="form-control" required>
-                            <option value="">Select Role</option>
+                        <select id="editRoleSelect{{ $user->id }}" name="role" class="form-control" required>
                             @foreach($roles as $role)
-                                <option value="{{ $role->id }}" @if($role->id == $user->roles->pluck('id')->first()) selected @endif
-                                    @if($role->name === 'employee') data-is-employee="true" @endif>
+                                <option value="{{ $role->name }}"
+                                    data-is-employee="{{ $role->name === 'employee' ? 'true' : 'false' }}"
+                                    @if($role->name == $user->roles->pluck('name')->first()) selected @endif>
                                     {{ $role->display_name }}
                                 </option>
                             @endforeach
@@ -147,17 +147,17 @@
                         <div class="form-group">
                             <label>Position</label>
                             <input id="editPosition{{ $user->id }}" type="text" name="position" class="form-control"
-                                value="{{ old('position', $user->position ?? '') }}">
+                                value="{{ old('position', $user->employee?->position ?? '') }}">
                         </div>
                         <div class="form-group">
                             <label>Department</label>
                             <input id="editDepartment{{ $user->id }}" type="text" name="department" class="form-control"
-                                value="{{ old('department', $user->department ?? '') }}">
+                                value="{{ old('department', $user->employee?->department ?? '') }}">
                         </div>
                         <div class="form-group">
                             <label>Phone</label>
-                            <input id="editPhone{{ $user->id }}" type="text" name="phone" class="form-control"
-                                value="{{ old('phone', $user->phone ?? '') }}">
+                            <input id="editPhone{{ $user->id }}" type="text" name="mobile" class="form-control"
+                                value="{{ old('mobile', $user->employee?->mobile ?? '') }}">
                         </div>
                     </div>
 
@@ -216,25 +216,21 @@
                             employeeFields.style.display = isEmployee ? 'block' : 'none';
                         }
                         roleSelect.addEventListener('change', toggleEmployeeFields);
-                        // initial call to set correct visibility on modal open
+                        // initial call to set correct visibility on page load
                         toggleEmployeeFields();
                     }
                 })();
             @endforeach
-        });
+            });
 
         function openModal(id) {
             const modal = document.getElementById(id);
-            if (modal) {
-                modal.style.display = 'block';
-            }
+            if (modal) modal.style.display = 'block';
         }
 
         function closeModal(id) {
             const modal = document.getElementById(id);
-            if (modal) {
-                modal.style.display = 'none';
-            }
+            if (modal) modal.style.display = 'none';
         }
     </script>
 @endsection

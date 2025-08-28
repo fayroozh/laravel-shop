@@ -17,7 +17,7 @@ const ProductCard = ({ project, addToCart }) => {
         <div className="relative overflow-hidden group ">
           <motion.img
             className="img-product"
-            src={project.thumbnail}
+            src={project.image_url}
             alt={project.title}
             whileHover={{ scale: 1.05 }}
           />

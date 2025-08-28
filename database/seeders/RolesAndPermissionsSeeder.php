@@ -2,61 +2,73 @@
 
 namespace Database\Seeders;
 
-use App\Models\Role;
-use App\Models\Permission;
 use Illuminate\Database\Seeder;
+use Spatie\Permission\Models\Role;
+use Spatie\Permission\Models\Permission;
+use App\Models\User;
+use Illuminate\Support\Facades\Hash;
 
 class RolesAndPermissionsSeeder extends Seeder
 {
     public function run()
     {
-        // Create Roles
-        $roles = [
-            ['name' => 'super_admin', 'display_name' => 'Super Admin', 'description' => 'Has access to everything'],
-            ['name' => 'sales_manager', 'display_name' => 'Sales Manager', 'description' => 'Manages products and orders'],
-            ['name' => 'hr_manager', 'display_name' => 'HR Manager', 'description' => 'Manages employees'],
-            ['name' => 'accountant', 'display_name' => 'Accountant', 'description' => 'Manages reports and orders']
+        // Reset cached roles and permissions
+        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+
+        // Define permissions
+        $permissions = [
+            ['name' => 'edit articles', 'display_name' => 'Edit Articles', 'group' => 'articles'],
+            ['name' => 'delete articles', 'display_name' => 'Delete Articles', 'group' => 'articles'],
+            ['name' => 'publish articles', 'display_name' => 'Publish Articles', 'group' => 'articles'],
+            ['name' => 'unpublish articles', 'display_name' => 'Unpublish Articles', 'group' => 'articles'],
+            ['name' => 'read-products', 'display_name' => 'Read Products', 'group' => 'system'],
+            ['name' => 'read-orders', 'display_name' => 'Read Orders', 'group' => 'system'],
+            ['name' => 'create_employees', 'display_name' => 'Create Employees', 'group' => 'employees'],
+            ['name' => 'read_employees', 'display_name' => 'Read Employees', 'group' => 'employees'],
+            ['name' => 'update_employees', 'display_name' => 'Update Employees', 'group' => 'employees'],
+            ['name' => 'delete_employees', 'display_name' => 'Delete Employees', 'group' => 'employees'],
         ];
 
-        foreach ($roles as $role) {
-            Role::create($role);
+        // Create or update permissions
+        foreach ($permissions as $perm) {
+            Permission::updateOrCreate(
+                ['name' => $perm['name'], 'guard_name' => 'web'],
+                ['display_name' => $perm['display_name'], 'group' => $perm['group']]
+            );
         }
 
-        // Create Permissions
-        $permissionGroups = [
-            'products' => [
-                ['name' => 'view_products', 'display_name' => 'View Products'],
-                ['name' => 'create_products', 'display_name' => 'Create Products'],
-                ['name' => 'edit_products', 'display_name' => 'Edit Products'],
-                ['name' => 'delete_products', 'display_name' => 'Delete Products']
-            ],
-            'employees' => [
-                ['name' => 'view_employees', 'display_name' => 'View Employees'],
-                ['name' => 'create_employees', 'display_name' => 'Create Employees'],
-                ['name' => 'edit_employees', 'display_name' => 'Edit Employees'],
-                ['name' => 'delete_employees', 'display_name' => 'Delete Employees']
-            ],
-            'orders' => [
-                ['name' => 'view_orders', 'display_name' => 'View Orders'],
-                ['name' => 'create_orders', 'display_name' => 'Create Orders'],
-                ['name' => 'edit_orders', 'display_name' => 'Edit Orders'],
-                ['name' => 'delete_orders', 'display_name' => 'Delete Orders']
-            ],
-            'reports' => [
-                ['name' => 'view_reports', 'display_name' => 'View Reports'],
-                ['name' => 'generate_reports', 'display_name' => 'Generate Reports']
+        // Create or update roles
+        $adminRole = Role::updateOrCreate(
+            ['name' => 'admin', 'guard_name' => 'web'],
+            ['display_name' => 'المدير العام']
+        );
+        $employeeRole = Role::updateOrCreate(
+            ['name' => 'employee', 'guard_name' => 'web'],
+            ['display_name' => 'الموظف']
+        );
+
+        // Assign all permissions to admin
+        $adminRole->syncPermissions(Permission::all());
+
+        // Assign specific permissions to employee
+        $employeeRole->syncPermissions([
+            'read-products',
+            'read-orders',
+            'create_employees',
+            'read_employees',
+            'update_employees',
+            'delete_employees',
+        ]);
+
+        // Create admin user
+        $admin = User::firstOrCreate(
+            ['email' => 'admin@g.c'],
+            [
+                'name' => 'Admin',
+                'password' => Hash::make('password'),
+                'is_admin' => true
             ]
-        ];
-
-        foreach ($permissionGroups as $group => $permissions) {
-            foreach ($permissions as $permission) {
-                Permission::create([
-                    'name' => $permission['name'],
-                    'display_name' => $permission['display_name'],
-                    'description' => $permission['display_name'],
-                    'group' => $group
-                ]);
-            }
-        }
+        );
+        $admin->assignRole($adminRole);
     }
 }

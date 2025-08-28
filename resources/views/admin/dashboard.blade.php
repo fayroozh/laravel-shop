@@ -103,62 +103,65 @@
     <div class="charts-grid">
         <div class="chart-card">
             <h3>📈 Monthly Orders</h3>
-            <canvas id="ordersChart"></canvas>
+            <canvas id="monthlyOrdersChart"></canvas>
         </div>
         <div class="chart-card">
             <h3>💰 Monthly Revenue</h3>
-            <canvas id="revenueChart"></canvas>
+            <canvas id="monthlyRevenueChart"></canvas>
         </div>
     </div>
+@endsection
 
+@push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        // Orders Chart
-        const ordersCtx = document.getElementById('ordersChart').getContext('2d');
-        new Chart(ordersCtx, {
-            type: 'line',
-            data: {
-                labels: {!! json_encode($monthlyOrders->pluck('month')) !!},
-                datasets: [{
-                    label: 'Orders',
-                    data: {!! json_encode($monthlyOrders->pluck('count')) !!},
-                    borderColor: '#3498db',
-                    backgroundColor: 'rgba(52, 152, 219, 0.1)',
-                    tension: 0.4
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                }
-            }
-        });
+        document.addEventListener('DOMContentLoaded', function () {
+            const months = {!! json_encode($months) !!};
+            const monthlyOrders = {!! json_encode($monthlyOrders) !!};
+            const monthlyRevenue = {!! json_encode($monthlyRevenue) !!};
 
-        // Revenue Chart
-        const revenueCtx = document.getElementById('revenueChart').getContext('2d');
-        new Chart(revenueCtx, {
-            type: 'bar',
-            data: {
-                labels: {!! json_encode($monthlyRevenue->pluck('month')) !!},
-                datasets: [{
-                    label: 'Revenue',
-                    data: {!! json_encode($monthlyRevenue->pluck('total')) !!},
-                    backgroundColor: '#2ecc71',
-                    borderColor: '#27ae60',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        display: false
+            // Monthly Orders Chart
+             new Chart(document.getElementById('monthlyOrdersChart'), {
+                type: 'bar',
+                data: {
+                    labels: months,
+                    datasets: [{
+                        label: 'Monthly Orders',
+                        data: monthlyOrders,
+                        backgroundColor: '#3498db'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
                     }
                 }
-            }
+            });
+
+            // Monthly Revenue Chart
+           new Chart(document.getElementById('monthlyRevenueChart'), {
+                type: 'line',
+                data: {
+                    labels: months,
+                    datasets: [{
+                        label: 'Monthly Revenue',
+                        data: monthlyRevenue,
+                        borderColor: '#2ecc71',
+                        fill: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
         });
 
         function exportReport(format) {
@@ -168,4 +171,4 @@
             window.location.href = url.replace('__FORMAT__', format);
         }
     </script>
-@endsection
+@endpush

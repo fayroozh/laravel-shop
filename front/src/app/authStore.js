@@ -7,27 +7,32 @@ const useAuthStore = create(
       token: null,
       user: null,
       isAuthenticated: false,
-      
+
       // Set token and auth status
-      setToken: (token) => set({ 
+      setToken: (token) => set({
         token,
-        isAuthenticated: !!token 
+        isAuthenticated: !!token
       }),
-      
+
       // Set user data
       setUser: (user) => set({
         user
       }),
 
       // Clear token and auth status
-      logout: () => set({ 
+      logout: () => set({
         token: null,
         user: null,
         isAuthenticated: false
       }),
+
+      // Update user's theme
+      setUserTheme: (theme) => set((state) => ({
+        user: state.user ? { ...state.user, theme } : null
+      })),
     }),
     {
-      name: 'auth-storage', 
+      name: 'auth-storage',
       getStorage: () => localStorage,
     }
   )

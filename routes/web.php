@@ -22,9 +22,9 @@ use App\Http\Controllers\NotificationController;
 */
 
 // Redirect base URL to the React frontend
-Route::get('/', function () {
-    return redirect(env('FRONTEND_URL', 'http://localhost:5173'));
-});
+// Route::get('/', function () {
+//     return redirect(env('FRONTEND_URL', 'http://localhost:5173'));
+// });
 
 // Admin Authentication Routes
 Route::prefix('admin')->name('admin.')->group(function () {
@@ -111,11 +111,11 @@ Route::middleware(['auth', \App\Http\Middleware\AdminMiddleware::class])
 
         // Reports
         Route::prefix('reports')->name('reports.')->group(function () {
-            Route::get('/', [ReportController::class, 'index'])->name('index');
-            Route::get('/inventory', [ReportController::class, 'inventory'])->name('inventory');
-            Route::get('/sales', [ReportController::class, 'sales'])->name('sales');
-            Route::get('/customers', [ReportController::class, 'customers'])->name('customers');
-            Route::get('/employees', [ReportController::class, 'employees'])->name('employees');
+            Route::get('/', [AdminController::class, 'reports'])->name('index');
+            Route::get('/inventory', [AdminController::class, 'inventoryReports'])->name('inventory');
+            Route::get('/sales', [AdminController::class, 'salesReports'])->name('sales');
+            Route::get('/customers', [AdminController::class, 'customerReports'])->name('customers');
+            Route::get('/employees', [AdminController::class, 'employeeReports'])->name('employees');
             Route::get('/export/{type}/{format}', [AdminController::class, 'exportReport'])->name('export');
         });
 

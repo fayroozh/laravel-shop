@@ -66,13 +66,13 @@
             </tr>
         </thead>
         <tbody>
-            @forelse($customers ?? [] as $customer)
+            @forelse($customers as $customer)
             <tr>
                 <td>{{ $customer->name }}</td>
                 <td class="type-{{ $customer->type }}">{{ ucfirst($customer->type) }}</td>
                 <td>{{ $customer->total_orders }}</td>
                 <td>${{ number_format($customer->total_spent, 2) }}</td>
-                <td>{{ optional($customer->last_purchase)->format('Y-m-d') ?? 'N/A' }}</td>
+                <td>{{ $customer->last_purchase ? $customer->last_purchase->format('Y-m-d') : 'N/A' }}</td>
             </tr>
             @empty
             <tr>
@@ -81,9 +81,9 @@
             @endforelse
         </tbody>
     </table>
-    @if($customers instanceof \Illuminate\Pagination\LengthAwarePaginator)
+     @if(isset($paginator) && $paginator->hasPages())
         <div class="mt-3">
-            {{ $customers->links() }}
+            {{ $paginator->appends(request()->query())->links() }}
         </div>
     @endif
 </div>

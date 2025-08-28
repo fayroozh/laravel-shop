@@ -4,7 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Feedback;
 use Illuminate\Http\Request;
-
+use App\Models\Notification;
+use App\Models\User;
 class FeedbackController extends Controller
 {
     public function index()
@@ -34,6 +35,17 @@ class FeedbackController extends Controller
             'feedback' => $validated['feedback'],
             'name' => $request->user()->name,
         ]);
+
+        // Notify admin
+        $admin = User::where('is_admin', true)->first();
+        if ($admin) {
+            Notification::create([
+                'user_id' => $admin->id,
+                'title' => 'New Feedback Received',
+                'message' => "New feedback has been submitted by {$request->user()->name}.",
+                'type' => 'info',
+            ]);
+        }
 
         return response()->json([
             'message' => 'Feedback submitted successfully',

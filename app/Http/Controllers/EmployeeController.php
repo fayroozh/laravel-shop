@@ -3,46 +3,54 @@
 namespace App\Http\Controllers;
 
 use App\Models\Employee;
+use App\Models\User;
+use App\Models\Role;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 
 class EmployeeController extends Controller
 {
     public function index()
     {
-        $employees = Employee::all();
-        return view('admin.employees', compact('employees'));
+        // جلب الموظفين مع المستخدم والدور
+        $employees = Employee::with('user.roles')->get();
+        $roles = Role::all();
+        return view('admin.employees', compact('employees', 'roles'));
+    }
+
+    public function create()
+    {
+        $roles = Role::all();
+        return view('admin.employees.create', compact('roles'));
     }
 
     public function store(Request $request)
     {
         $data = $request->validate([
             'name' => 'required|string',
-            'email' => 'required|email|unique:employees|unique:users',
+            'email' => 'required|email|unique:users,email',
             'position' => 'required|string',
             'mobile' => 'nullable|string',
             'password' => 'required|string|min:6',
-            'role_id' => 'required|exists:roles,id'
+            'role_id' => 'required|exists:roles,id',
         ]);
 
+        // إنشاء مستخدم
         $user = User::create([
             'name' => $data['name'],
             'email' => $data['email'],
-            'password' => Hash::make($data['password'])
+            'password' => Hash::make($data['password']),
         ]);
 
-        if ($data['role_id']) {
-            $user->roles()->attach($data['role_id']);
-        }
+        // ربط الدور بالمستخدم
+        $user->roles()->attach($data['role_id']);
 
-        $employee = Employee::create([
-            'name' => $data['name'],
-            'email' => $data['email'],
+        // إنشاء موظف وربطه بالمستخدم
+        Employee::create([
             'position' => $data['position'],
             'mobile' => $data['mobile'] ?? null,
-            'user_id' => $user->id
+            'user_id' => $user->id,
         ]);
-
-        ActivityLogger::log("Added new employee: {$employee->name}", "👨‍💼", $employee);
 
         return redirect()->route('admin.employees')->with('success', 'Employee added successfully');
     }
@@ -51,44 +59,44 @@ class EmployeeController extends Controller
     {
         $data = $request->validate([
             'name' => 'required|string',
-            'email' => 'required|email|unique:employees,email,' . $employee->id . '|unique:users,email,' . $employee->user_id,
+            'email' => 'required|email|unique:users,email,' . $employee->user_id,
             'position' => 'required|string',
             'mobile' => 'nullable|string',
             'password' => 'nullable|string|min:6',
             'role_id' => 'required|exists:roles,id',
         ]);
 
+        // تحديث الموظف (جدول employees)
         $employee->update([
-            'name' => $data['name'],
-            'email' => $data['email'],
             'position' => $data['position'],
-            'mobile' => $data['mobile'] ?? $employee->mobile
+            'mobile' => $data['mobile'] ?? $employee->mobile,
         ]);
 
-        if ($employee->user) {
-            $userUpdate = [
-                'name' => $data['name'],
-                'email' => $data['email']
-            ];
-            if (!empty($data['password'])) {
-                $userUpdate['password'] = Hash::make($data['password']);
-            }
-            $employee->user->update($userUpdate);
-            $employee->user->roles()->sync([$data['role_id']]);
+        // تحديث المستخدم المرتبط (جدول users)
+        $userUpdate = [
+            'name' => $data['name'],
+            'email' => $data['email'],
+        ];
+
+        if (!empty($data['password'])) {
+            $userUpdate['password'] = Hash::make($data['password']);
         }
 
-        ActivityLogger::log("Updated employee: {$employee->name}", "👨‍💼", $employee);
+        $employee->user->update($userUpdate);
+
+        // مزامنة الدور
+        $employee->user->roles()->sync([$data['role_id']]);
 
         return redirect()->route('admin.employees')->with('success', 'Employee updated successfully');
     }
 
     public function destroy(Employee $employee)
     {
+        // حذف المستخدم المرتبط
         if ($employee->user) {
+            $employee->user->roles()->detach(); // إزالة أي أدوار مرتبطة
             $employee->user->delete();
         }
-
-        ActivityLogger::log("Deleted employee: {$employee->name}", "👨‍💼", $employee);
 
         $employee->delete();
 

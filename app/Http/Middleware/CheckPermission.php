@@ -10,7 +10,7 @@ class CheckPermission
 {
     public function handle(Request $request, Closure $next, $permission): Response
     {
-        if (!auth()->check() || !auth()->user()->hasPermission($permission)) {
+        if (!auth()->check() || !auth()->user()->hasPermissionTo($permission)) {
             return redirect()->route('admin.dashboard')
                 ->with('error', 'ليس لديك صلاحية للوصول إلى هذه الصفحة');
         }

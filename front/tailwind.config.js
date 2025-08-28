@@ -1,9 +1,10 @@
 /** @type {import('tailwindcss').Config} */
-module.exports = {
+export default {
   content: [
     "./index.html",
-    "./src/**/*.{js,jsx,ts,tsx}",
+    "./src/**/*.{js,jsx,ts,tsx}",   // صححت // -> /**/
   ],
+  darkMode: 'class',   // لتفعيل الوضع الليلي عبر class
   theme: {
     extend: {
       fontFamily: {
@@ -12,4 +13,4 @@ module.exports = {
     },
   },
   plugins: [],
-}
+};

@@ -21,16 +21,12 @@ export const useAuth = () => {
             setToken(data.token);
             setUser(data.user);
 
-            const isAdmin =
-                data.user.is_admin === 1 || data.user.is_admin === true;
-            const isEmployee =
-                data.user.is_employee_role === 1 || data.user.is_employee_role === true;
+            // توجيه المستخدم دائمًا إلى الصفحة الرئيسية بعد تسجيل الدخول
+            navigate("/");
 
-            if (isAdmin || isEmployee) {
-                window.location.href = "http://localhost:8000/admin/dashboard";
-                toast.success("تم تسجيل الدخول بنجاح! جاري توجيهك إلى لوحة التحكم");
+            if (data.user.email === 'admin@example.com') {
+                toast.success("تم تسجيل الدخول بنجاح كمسؤول!");
             } else {
-                navigate("/");
                 toast.success("تم تسجيل الدخول بنجاح!");
             }
         },
@@ -47,9 +43,9 @@ export const useAuth = () => {
             try {
                 // جلب CSRF Token من المسار الصحيح
                 await authClient.get("/sanctum/csrf-cookie");
-                
+
                 await new Promise(resolve => setTimeout(resolve, 2000));
-                
+
                 const response = await authClient.post("/register", userData);
                 return response.data;
             } catch (error) {

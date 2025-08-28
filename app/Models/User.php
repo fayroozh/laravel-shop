@@ -2,20 +2,25 @@
 
 namespace App\Models;
 
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable, HasRoles;
 
+    /**
+     * The attributes that are mass assignable.
+     */
     protected $fillable = [
         'name',
         'email',
         'password',
-        'is_admin',
+        'theme',
     ];
 
     protected $hidden = [
@@ -23,14 +28,20 @@ class User extends Authenticatable
         'remember_token',
     ];
 
-    protected function casts(): array
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array<string, string>
+     */
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+    ];
+
+    public function hasPermission($permission)
     {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-            'is_admin' => 'boolean',
-        ];
+        return $this->hasPermissionTo($permission);
     }
+
 
     // العلاقات
     public function orders()
@@ -48,39 +59,8 @@ class User extends Authenticatable
         return $this->hasOne(Employee::class);
     }
 
-    public function roles()
-    {
-        return $this->belongsToMany(Role::class, 'user_roles');
-    }
-
-    // الدوال المساعدة
-    public function hasPermission($permission)
-    {
-        // If user is admin, they have all permissions
-        if ($this->is_admin) {
-            return true;
-        }
-        
-        // Check if user has the specific permission through roles
-        return $this->roles()->whereHas('permissions', function ($query) use ($permission) {
-            $query->where('name', $permission);
-        })->exists();
-    }
-
     public function isAdmin()
     {
-        // التحقق من خاصية is_admin أو وجود دور admin
-        return $this->is_admin === true || $this->roles()->where('name', 'admin')->exists();
-    }
-
-    public function isEmployee()
-    {
-        // التحقق من خاصية is_employee_role أو وجود دور employee
-        return $this->is_employee_role || $this->roles()->where('name', 'employee')->exists() || $this->employee()->exists();
-    }
-
-    public function getEmployeeData()
-    {
-        return $this->employee;
+        return $this->hasRole('admin');
     }
 }

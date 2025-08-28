@@ -8,6 +8,8 @@ import LoginPage from "../auth/LoginPage";
 import RegisterPage from "../auth/RegisterPage";
 import Slider from "../slider/Slider";
 import Home from "../Home/Home";
+import EditProfilePage from "../auth/EditProfilePage";
+
 
 // استيراد مكونات لوحة التحكم
 import AdminLayout from "../admin/layouts/AdminLayout";
@@ -37,6 +39,10 @@ const router = createBrowserRouter([
       {
         path: "profile",
         element: <ProfilePage />,
+      },
+       {
+        path: "edit-profile", // إضافة المسار هنا
+        element: <EditProfilePage />,
       },
       {
         path: "login",

@@ -6,13 +6,15 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\View;
 use App\Models\Role;
 
+use Illuminate\Support\Facades\Auth;
+
 class AppServiceProvider extends ServiceProvider
 {
     /**
      * Register any application services.
      */
 
-     
+
     public function register(): void
     {
         //
@@ -23,8 +25,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        View::share('roles', Role::all());
-
+        View::composer('*', function ($view) {
+            if (Auth::check()) {
+                $view->with('theme', Auth::user()->theme);
+            } else {
+                $view->with('theme', 'light'); // Default theme for guests
+            }
+        });
     }
-    
 }

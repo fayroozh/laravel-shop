@@ -4,15 +4,25 @@ import useFavoriteStore from "../app/addToFavorite";
 import Drawer from "../components/Drawer";
 import { FaHeart } from "react-icons/fa";
 
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
+const toAbsolute = (u) => {
+  if (!u) return null;
+  if (typeof u !== "string") return null;
+  if (u.startsWith("http")) return u;
+  if (u.startsWith("/")) return `${API_BASE}${u}`;
+  // أمثلة: "products/xxx.png" أو "storage/products/xxx.png"
+  return `${API_BASE}/storage/${u.replace(/^storage\//, "")}`;
+};
+
+const fallback = "/no-image.png"; // ضع no-image.png داخل مجلد public
+
 const Favorite = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { favorite = [], removeFromFav } = useFavoriteStore();
   const navigate = useNavigate();
 
-  const toggleDrawer = () => {
-    setIsOpen(!isOpen);
-  };
-
+  const toggleDrawer = () => setIsOpen((v) => !v);
   const favoriteIcon = <FaHeart className="w-4 h-4 me-2.5" />;
 
   return (
@@ -42,31 +52,53 @@ const Favorite = () => {
           </p>
         ) : (
           <div className="space-y-4">
-            {favorite.map((item) => (
-              <div key={item.id} className="favorite-item flex justify-between items-center border-b pb-2">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3">
-                    <img
-                      src={item.thumbnail || item?.image}
-                      alt={item.title || item.name}
-                      className="w-16 h-16 object-cover rounded"
-                    />
-                    <div>
-                      <h6 className="font-medium">{item.title || item.name}</h6>
-                      <p className="text-sm text-gray-500">
-                        ${item.price || 0}
-                      </p>
+            {favorite.map((item) => {
+              // التقط أول صورة ممكنة من كل الأشكال
+              const first =
+                item?.images?.[0] && typeof item.images[0] === "object"
+                  ? (item.images[0].url ||
+                     item.images[0].image_url ||
+                     item.images[0].image_path)
+                  : (typeof item?.images?.[0] === "string" ? item.images[0] : null);
+
+              const rawImg =
+                item?.image_url || first || item?.thumbnail || item?.image || null;
+
+              const src = toAbsolute(rawImg) || fallback;
+
+              return (
+                <div
+                  key={item.id}
+                  className="favorite-item flex justify-between items-center border-b pb-2"
+                >
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={src}
+                        alt={item.title || item.name || "Product"}
+                        onError={(e) => (e.currentTarget.src = fallback)}
+                        className="w-16 h-16 object-cover rounded"
+                      />
+                      <div>
+                        <h6 className="font-medium">{item.title || item.name}</h6>
+                        <p className="text-sm text-gray-500">
+                          ${item.price ?? 0}
+                        </p>
+                      </div>
                     </div>
                   </div>
+
+                  <button
+                    onClick={() => removeFromFav(item.id)}
+                    className="ml-2 text-red-500 hover:text-red-700 transition-colors duration-200"
+                    aria-label="Remove from favorites"
+                  >
+                    <FaHeart className="w-5 h-5" />
+                  </button>
                 </div>
-                <button
-                  onClick={() => removeFromFav(item.id)}
-                  className="ml-2 text-red-500 hover:text-red-700 transition-colors duration-200"
-                >
-                  <FaHeart className="w-5 h-5" />
-                </button>
-              </div>
-            ))}
+              );
+            })}
+
             <div className="mt-4 space-y-2">
               <button
                 onClick={() => navigate("/products")}

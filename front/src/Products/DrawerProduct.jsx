@@ -5,41 +5,29 @@ import Drawer from "../components/Drawer";
 import { BsInfoCircle } from "react-icons/bs";
 import { FaTrash } from "react-icons/fa";
 
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
+const toAbsolute = (u) => {
+  if (!u) return null;
+  if (typeof u !== "string") return null;
+  if (u.startsWith("http")) return u;
+  if (u.startsWith("/")) return `${API_BASE}${u}`;
+  return `${API_BASE}/storage/${u.replace(/^storage\//, "")}`;
+};
+const fallback = "/no-image.png";
+
 const DrawerProduct = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { cartItems, removeFromCart, updateQuantity, getTotalPrice } = useCartStore();
   const navigate = useNavigate();
 
-  const toggleDrawer = () => {
-    setIsOpen(!isOpen);
-  };
-
-  const handleWhatsAppCheckout = () => {
-    const itemsText = cartItems
-      .map(
-        (item) =>
-          `• ${item.name} - $${item.price.toFixed(2)} x ${item.quantity}`
-      )
-      .join("\n");
-
-    const total = getTotalPrice();
-    const message = `I want to purchase:\n${itemsText}\n\nTotal: $${total.toFixed(
-      2
-    )}`;
-    const whatsappUrl = `https://api.whatsapp.com/send?phone=352681538889?text=${encodeURIComponent(
-      message
-    )}`;
-
-    window.location.href = whatsappUrl;
-  };
-
+  const toggleDrawer = () => setIsOpen((v) => !v);
   const cartIcon = <BsInfoCircle className="w-4 h-4 me-2.5" />;
 
   return (
     <div>
       <div className="text-center">
         <button
-          className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 "
+          className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5"
           type="button"
           onClick={toggleDrawer}
         >
@@ -61,67 +49,95 @@ const DrawerProduct = () => {
             Your cart is empty. Add some products to get started!
           </p>
         ) : (
-          <div className="space-y-4">
-            {cartItems.map((item) => (
-              <div
-                key={item.id}
-                className="flex justify-between items-center border-b pb-2"
-              >
-                <div className="flex-1">
-                  <div className="flex items-center gap-3">
+          <div className="space-y-5">
+            {cartItems.map((item) => {
+              const first =
+                item?.images?.[0] && typeof item.images[0] === "object"
+                  ? (item.images[0].url ||
+                     item.images[0].image_url ||
+                     item.images[0].image_path)
+                  : (typeof item?.images?.[0] === "string" ? item.images[0] : null);
+
+              const rawImg =
+                item?.image_url || first || item?.thumbnail || item?.image || null;
+              const src = toAbsolute(rawImg) || fallback;
+
+              return (
+                <div
+                  key={item.id}
+                  className="border-b pb-5 grid grid-cols-[84px_1fr] gap-5 items-start"
+                >
+                  {/* يسار: الصورة فقط */}
+                  <div className="flex items-start">
                     <img
-                      src={item.thumbnail || item?.image}
-                      alt={item.title || item.name}
-                      className="w-16 h-16 object-cover rounded"
+                      src={src}
+                      alt={item.title || item.name || "Product"}
+                      onError={(e) => (e.currentTarget.src = fallback)}
+                      className="w-20 h-20 object-cover rounded"
                     />
-                    <div>
-                      <h6 className="font-medium">{item.title || item.name}</h6>
-                      <p className="text-sm text-gray-500">
-                        ${item.price || 0} x {item.quantity}
-                      </p>
+                  </div>
+
+                  {/* يمين: الاسم والسعر + الكنترولز تحتهم وبالنص */}
+                  <div className="flex flex-col">
+                    <h6 className="font-medium leading-tight mb-1 line-clamp-2">
+                      {item.title || item.name}
+                    </h6>
+                    <p className="text-sm text-gray-500">
+                      ${Number(item.price ?? 0).toFixed(2)} × {item.quantity}
+                    </p>
+
+                    {/* ↓↓↓ الكنترولز باليمين تحت وبالنص */}
+                    <div className="mt-4 flex items-center justify-center gap-6">
+                      <div className="inline-flex items-center border rounded-lg overflow-hidden shadow-sm">
+                        <button
+                          onClick={() =>
+                            updateQuantity(item.id, Math.max(1, item.quantity - 1))
+                          }
+                          className="px-3 py-2 hover:bg-gray-100"
+                          aria-label="Decrease quantity"
+                        >
+                          −
+                        </button>
+                        <span className="px-4 py-2 min-w-10 text-center select-none">
+                          {item.quantity}
+                        </span>
+                        <button
+                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                          className="px-3 py-2 hover:bg-gray-100"
+                          aria-label="Increase quantity"
+                        >
+                          +
+                        </button>
+                      </div>
+
+                      <button
+                        onClick={() => removeFromCart(item.id)}
+                        className="text-red-500 hover:text-red-600"
+                        aria-label="Remove from cart"
+                        title="Remove"
+                      >
+                        <FaTrash className="w-5 h-5" />
+                      </button>
                     </div>
+                    {/* إذا بدّكها يمين بدل بالنص: غيّر justify-center => justify-end */}
                   </div>
                 </div>
-                <div className="flex items-center">
-                  <button
-                    onClick={() =>
-                      updateQuantity(item.id, Math.max(1, item.quantity - 1))
-                    }
-                    className="px-2 py-1 bg-gray-200 rounded-l"
-                  >
-                    -
-                  </button>
-                  <span className="px-3">{item.quantity}</span>
-                  <button
-                    onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                    className="px-2 py-1 bg-gray-200 rounded-r"
-                  >
-                    +
-                  </button>
-                  <button
-                    onClick={() => removeFromCart(item.id)}
-                    className="ml-2 text-red-500"
-                  >
-                    <FaTrash className="w-5 h-5" />
-                  </button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
 
-            <div className="mt-4 pt-2 border-t">
+            <div className="mt-2 pt-2 border-t">
               <div className="flex justify-between font-medium">
                 <span>Total:</span>
-                <span>${getTotalPrice().toFixed(2)}</span>
+                <span>${Number(getTotalPrice() ?? 0).toFixed(2)}</span>
               </div>
 
-              <div className="mt-4 space-y-2">
+              <div className="mt-4">
                 <button
                   onClick={() => navigate("/checkout")}
                   className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors"
                 >
                   Regular Checkout
                 </button>
-               
               </div>
             </div>
           </div>

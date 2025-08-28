@@ -7,7 +7,7 @@ import FeaturedProducts from './FeaturedProducts';
 import ProductModal from './ProductModal';
 import AllProducts from './AllProducts';
 import useCartStore from '../app/store';
-import Slider from '../slider/Slider';
+// import Slider from '../slider/Slider';
 
 const Home = () => {
   const { addToCart } = useCartStore();
@@ -28,7 +28,7 @@ const Home = () => {
       <div ref={heroRef}>
         <HeroSection isInView={isInView} />
       </div>
-      <Slider />
+     
       <FeaturedProducts handleProductClick={handleProductClick} handleAddToCart={handleAddToCart} />
       <AllProducts handleProductClick={handleProductClick} handleAddToCart={handleAddToCart} />
       <ProductModal 

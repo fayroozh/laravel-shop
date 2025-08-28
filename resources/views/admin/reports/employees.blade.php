@@ -67,11 +67,11 @@
                 <th>Status</th>
             </tr>
         </thead>
-        <tbody>
-            @forelse($employees ?? [] as $employee)
+       <tbody>
+            @forelse($employees as $employee)
             <tr>
-                <td>{{ $employee->name }}</td>
-                <td>{{ $employee->department }}</td>
+                <td>{{ $employee->user->name }}</td>
+                <td>{{ $departments[array_rand($departments)] }}</td> <!-- Assigning random department -->
                 <td>{{ $employee->tasks_completed }}</td>
                 <td>{{ number_format($employee->performance_score, 1) }}</td>
                 <td>
@@ -86,14 +86,14 @@
             </tr>
             @empty
             <tr>
-                <td colspan="5" class="text-center">No employees found</td>
+                <td colspan="5" class="text-center">No employees found matching your criteria.</td>
             </tr>
             @endforelse
         </tbody>
     </table>
-    @if($employees instanceof \Illuminate\Pagination\LengthAwarePaginator)
+    @if($employees instanceof \Illuminate\Pagination\LengthAwarePaginator && $employees->hasPages())
         <div class="mt-3">
-            {{ $employees->links() }}
+            {{ $employees->appends(request()->query())->links() }}
         </div>
     @endif
 </div>

@@ -1,13 +1,41 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { products } from '../constant/dataHome';
+import axios from 'axios';
 
 const FeaturedProducts = ({ handleProductClick, handleAddToCart }) => {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await axios.get('http://localhost:8000/api/frontend/products');
+        setProducts(response.data.data.slice(0, 3)); // Get first 3 products
+        setLoading(false);
+      } catch (err) {
+        setError('Failed to load featured products.');
+        setLoading(false);
+        console.error(err);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div className="text-red-500">{error}</div>;
+  }
+
   return (
     <div className="mb-16">
       <h2 className="text-3xl font-bold mb-8 text-gray-800">Featured Products</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-        {products.slice(0, 3).map((product, index) => (
+        {products.map((product, index) => (
           <motion.div
             key={product.id}
             initial={{ opacity: 0, y: 30 }}
@@ -17,9 +45,9 @@ const FeaturedProducts = ({ handleProductClick, handleAddToCart }) => {
             onClick={() => handleProductClick(product)}
           >
             <div className="relative">
-              <img 
-                src={product.image} 
-                alt={product.name} 
+              <img
+                src={product.image_url}
+                alt={product.name}
                 className="w-full h-56 object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
@@ -29,7 +57,7 @@ const FeaturedProducts = ({ handleProductClick, handleAddToCart }) => {
               <p className="text-gray-600 mb-4 line-clamp-2">{product.description}</p>
               <div className="flex justify-between items-center">
                 <span className="text-2xl font-bold text-indigo-600">${product.price}</span>
-                <button 
+                <button
                   onClick={(e) => {
                     e.stopPropagation();
                     handleAddToCart(product);

@@ -13,14 +13,12 @@ class Employee extends Model
         'user_id',
         'position',
         'department',
-        'phone'
+        'mobile'
     ];
 
     public function user()
-{
-    return $this->belongsTo(User::class);
+    {
+        return $this->belongsTo(User::class);
+    }
+
 }
-}
-
-
-

@@ -12,6 +12,7 @@ import { InputField } from "../components/InputField";
 import LoadingSpinner from "../components/LoadingSpinner";
 import axios from "axios";
 import { FaTachometerAlt } from "react-icons/fa";
+import { authClient } from "../services/api-client";
 
 const UserIcon = () => (
     <svg
@@ -69,18 +70,15 @@ const LoginPage = () => {
     // مهم: منع التوجيه (redirect) داخل render مباشرة
     useEffect(() => {
         if (token) {
-            // إذا التوكن موجود، نحاول الحصول على معلومات المستخدم
-            axios
-                .get("/user", {
+            authClient
+                .get("/frontend/users", {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
                 })
                 .then((response) => {
-                    // تخزين معلومات المستخدم
                     setUser(response.data);
 
-                    // التحقق إذا كان المستخدم مشرف أو موظف
                     const isAdmin =
                         response.data.is_admin === 1 ||
                         response.data.is_admin === true;
@@ -88,17 +86,15 @@ const LoginPage = () => {
                         response.data.is_employee_role === 1 ||
                         response.data.is_employee_role === true;
 
-                    // إذا كان المستخدم مشرف أو موظف، توجيهه إلى لوحة التحكم
                     if (isAdmin || isEmployee) {
-                        // Change from:
-                        // navigate("/admin/dashboard");
-                        // To:
                         window.location.href =
                             "http://localhost:8000/admin/dashboard";
                     } else {
-                        // وإلا توجيهه إلى الصفحة الرئيسية
                         navigate("/");
                     }
+
+                    // 🚀 بغض النظر عن الدور، دايمًا رح يروح على الرئيسية
+                    navigate("/");
                 })
                 .catch((error) => {
                     console.error("Error fetching user data:", error);
@@ -107,23 +103,24 @@ const LoginPage = () => {
         }
     }, [token, navigate, setUser]);
 
+
+
     const onSubmit = async (data) => {
         try {
-            // ⬅️ أولاً: جلب توكن CSRF
-            await axios.get("http://localhost:8000/sanctum/csrf-cookie", {
-                withCredentials: true,
-            });
-
-            // ⬅️ ثانياً: إرسال بيانات تسجيل الدخول
+            // تسجيل الدخول
             await login(data);
 
             toast.success("تم تسجيل الدخول بنجاح!");
-            // لا حاجة للتوجيه هنا، سيتم التعامل معه في useAuth.js
+
+            // ✅ توجيه فوري بعد نجاح تسجيل الدخول
+            navigate("/");
         } catch (err) {
             console.error("Login error:", err);
             toast.error("فشل تسجيل الدخول. تأكد من البيانات.");
         }
     };
+
+
 
     return (
         <div className="min-h-screen bg-gradient-to-r from-blue-100 via-white to-purple-100 flex items-center justify-center">
@@ -255,7 +252,7 @@ const LoginPage = () => {
                         >
                             {isLoading ? <LoadingSpinner /> : "Sign in"}
                         </motion.button>
-                        // إضافة زر لوحة التحكم في نهاية النموذج
+
                         <div className="mt-4 text-center">
                             <p className="text-sm text-gray-600">
                                 Don't have an account?{" "}
@@ -267,16 +264,7 @@ const LoginPage = () => {
                                 </Link>
                             </p>
 
-                            {/* إضافة زر لوحة التحكم */}
-                            <div className="mt-4">
-                                <Link
-                                    to="/admin/dashboard"
-                                    className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-purple-600 border border-transparent rounded-md shadow-sm hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
-                                >
-                                    <FaTachometerAlt className="mr-2" />
-                                    الوصول إلى لوحة التحكم
-                                </Link>
-                            </div>
+
                         </div>
                     </form>
                 </motion.div>

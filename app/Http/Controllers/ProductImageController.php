@@ -26,10 +26,15 @@ class ProductImageController extends Controller
             $paths[] = $path;
         }
 
-        return response()->json([
-            'message' => 'Images uploaded successfully',
-            'paths' => $paths
-        ], 201);
+        if ($request->wantsJson()) {
+            return response()->json([
+                'message' => 'Images uploaded successfully',
+                'paths' => $paths
+            ], 201);
+        }
+
+        return redirect()->back()->with('success', 'Images uploaded successfully');
     }
+
 }
 

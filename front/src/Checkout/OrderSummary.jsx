@@ -13,7 +13,7 @@ const OrderSummary = ({ cartItems, subtotal, tax, total }) => {
             whileHover={{ scale: 1.01 }}
           >
             <div className="flex items-center justify-center space-x-4">
-              <img 
+              <img
                 className="w-16 h-16 object-cover rounded-lg"
                 src={item.thumbnail}
                 alt={item.name}
@@ -22,22 +22,22 @@ const OrderSummary = ({ cartItems, subtotal, tax, total }) => {
                 <h3 className="font-medium text-gray-800">{item.title}</h3>
               </div>
             </div>
-            <p className="font-semibold text-gray-800">${item.price.toFixed(2)}</p>
+            <p className="font-semibold text-gray-800">${Number(item.price).toFixed(2)}</p>
           </motion.div>
         ))}
       </div>
       <div className="space-y-2 border-t pt-4">
         <div className="flex justify-between text-gray-600">
           <span>Subtotal</span>
-          <span>${subtotal.toFixed(2)}</span>
+          <span>${Number(subtotal).toFixed(2)}</span>
         </div>
         <div className="flex justify-between text-gray-600">
           <span>Tax</span>
-          <span>${tax.toFixed(2)}</span>
+          <span>${Number(tax).toFixed(2)}</span>
         </div>
         <div className="flex justify-between font-semibold text-lg text-gray-800 pt-2 border-t">
           <span>Total</span>
-          <span>${total.toFixed(2)}</span>
+          <span>${Number(total).toFixed(2)}</span>
         </div>
       </div>
     </motion.div>
