@@ -41,5 +41,7 @@ const addAuthHeader = (config) => {
 apiClient.interceptors.request.use(addAuthHeader);
 authClient.interceptors.request.use(addAuthHeader);
 
+export const getCategories = () => apiClient.get("/frontend/categories");
+
 export { apiClient, authClient };
 export default apiClient;

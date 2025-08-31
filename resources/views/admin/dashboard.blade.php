@@ -41,15 +41,6 @@
             <a href="{{ route('admin.employees') }}" class="stat-link">View Details →</a>
         </div>
 
-        <div class="stat-card suppliers">
-            <div class="stat-icon">🏭</div>
-            <div class="stat-content">
-                <div class="stat-title">Total Suppliers</div>
-                <div class="stat-number">{{ $suppliers }}</div>
-                <div class="stat-change">New this month</div>
-            </div>
-            <a href="{{ route('admin.suppliers') }}" class="stat-link">View Details →</a>
-        </div>
 
         <div class="stat-card feedback">
             <div class="stat-icon">📝</div>

@@ -11,6 +11,7 @@ import {
   FaSignOutAlt,
   FaCog,
   FaSearch,
+  FaCommentDots,
 } from "react-icons/fa";
 import useAuthStore from "../app/authStore";
 import useAuth from "../hooks/useAuth";
@@ -46,7 +47,7 @@ const Navbar = () => {
     if (!token) return;
     apiClient
       .get("/frontend/users", {
-        headers: { Authorization: `Bearer ${token}` }, // ✅ صححتها
+        headers: { Authorization: `Bearer ${token}` },
       })
       .then((response) => {
         const userData = response.data?.[0];
@@ -71,8 +72,8 @@ const Navbar = () => {
             <Link to="/" className="flex items-center gap-2">
               <img
                 src="/logo.png"
-                className="h-8"
-                alt="Briktha Fashion Logo"
+                className="h-16 dark:brightness-0 dark:invert"
+                alt="BRIFKTHAR Logo"
               />
               <span className="text-xl font-semibold text-gray-800 dark:text-white">
                 BRIFKTHAR
@@ -88,13 +89,19 @@ const Navbar = () => {
               aria-expanded={isMenuOpen}
             >
               <span className="sr-only">Open main menu</span>
-              {isMenuOpen ? <FaTimes className="w-5 h-5" /> : <FaBars className="w-5 h-5" />}
+              {isMenuOpen ? (
+                <FaTimes className="w-5 h-5" />
+              ) : (
+                <FaBars className="w-5 h-5" />
+              )}
             </button>
 
             {/* Links */}
             <div
               id="navbar-default"
-              className={`w-full md:block md:w-auto ${isMenuOpen ? "block" : "hidden"}`} // ✅ backticks
+              className={`w-full md:block md:w-auto ${
+                isMenuOpen ? "block" : "hidden"
+              }`}
             >
               <ul className="font-medium flex flex-col md:flex-row md:items-center gap-2 md:gap-4 p-4 md:p-0 mt-4 md:mt-0 rounded-lg border md:border-0 bg-gray-50 md:bg-transparent dark:bg-gray-800 md:dark:bg-transparent border-gray-100 dark:border-gray-700">
                 <li>
@@ -113,6 +120,13 @@ const Navbar = () => {
                   <NavLink to="/profile" className={navLinkClasses}>
                     <FaUser className="w-4 h-4" />
                     <span>Profile</span>
+                  </NavLink>
+                </li>
+                {/* ✅ Feedback link */}
+                <li>
+                  <NavLink to="/feedback" className={navLinkClasses}>
+                    <FaCommentDots className="w-4 h-4" />
+                    <span>Feedback</span>
                   </NavLink>
                 </li>
 
@@ -170,16 +184,16 @@ const Navbar = () => {
 
               {(user?.email === "admin@example.com" ||
                 localStorage.getItem("adminMode") === "true") && (
-                  <a
-                    href="http://localhost:8000/admin/dashboard"
-                    className="p-2 rounded-lg text-gray-700 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 hover:bg-black/5 dark:hover:bg-white/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/50"
-                    title="لوحة تحكم الأدمن"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <FaCog className="w-5 h-5" />
-                  </a>
-                )}
+                <a
+                  href="http://localhost:8000/admin/dashboard"
+                  className="p-2 rounded-lg text-gray-700 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 hover:bg-black/5 dark:hover:bg-white/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/50"
+                  title="Admin Dashboard"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <FaCog className="w-5 h-5" />
+                </a>
+              )}
 
               <button
                 onClick={openAdvancedSearch}
@@ -194,7 +208,10 @@ const Navbar = () => {
 
       {/* Advanced Search Modal */}
       {isAdvancedSearchOpen && (
-        <AdvancedSearch isOpen={isAdvancedSearchOpen} onClose={closeAdvancedSearch} />
+        <AdvancedSearch
+          isOpen={isAdvancedSearchOpen}
+          onClose={closeAdvancedSearch}
+        />
       )}
     </div>
   );

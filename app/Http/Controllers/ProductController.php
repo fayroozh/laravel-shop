@@ -6,11 +6,12 @@ use App\Models\Product;
 use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
 class ProductController extends Controller
 {
     /**
-     * عرض كل المنتجات للـ Blade و JSON للـ API (لو طُلب JSON من نفس الصفحة)
+     * Display a listing of the resource.
      */
     public function index(Request $request)
     {
@@ -32,28 +33,28 @@ class ProductController extends Controller
             $query->orderBy($request->sort, 'asc');
         }
 
-        $products   = $query->get();
+        $products = $query->get();
         $categories = Category::all();
 
         if ($request->expectsJson()) {
-            $data = Product::with(['images','category'])->get()->map(fn($p) => $this->transformProduct($p));
-            return response()->json(['data' => $data, 'categories' => $categories], 200, [], JSON_UNESCAPED_UNICODE);
+            $data = Product::with(['images', 'category'])->get()->map(fn($p) => $this->transformProduct($p));
+            return response()->json(['data' => $data, 'categories' => $categories]);
         }
 
         return view('admin.products', compact('products', 'categories'));
     }
 
     /**
-     * عرض منتج واحد (للإدارة/الداخلي)
+     * Display the specified resource.
      */
     public function show(Product $product)
     {
         $product->load('images', 'category');
-        return response()->json(['data' => $this->transformProduct($product)], 200, [], JSON_UNESCAPED_UNICODE);
+        return response()->json(['data' => $this->transformProduct($product)]);
     }
 
     /**
-     * صفحة إنشاء منتج (Blade فقط)
+     * Show the form for creating a new resource.
      */
     public function create()
     {
@@ -62,51 +63,95 @@ class ProductController extends Controller
     }
 
     /**
-     * تخزين منتج جديد
+     * Store a newly created resource in storage.
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'title'       => 'required|string|max:100',
-            'description' => 'nullable|string',
-            'category_id' => 'nullable|exists:categories,id',
-            'price'       => 'required|numeric',
-            'discount'    => 'nullable|numeric',
-            'rating'      => 'nullable|numeric',
-            'stock'       => 'nullable|integer',
-            'images'      => 'nullable|array',
-            'images.*'    => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048'
-        ]);
+        Log::info('--- New Product Store Request ---');
+        Log::info('Request data:', $request->except('images'));
 
-        // الصورة الرئيسية = أول عنصر في المصفوفة
         if ($request->hasFile('images')) {
-            $path = $request->file('images')[0]->store('products', 'public');
-            $validated['image_url'] = $path; // نخزن المسار النسبي (products/..)
+            Log::info('`images` field is present and is a file.');
+            $files = $request->file('images');
+            if (is_array($files)) {
+                Log::info('`images` is an array. Count: ' . count($files));
+                foreach ($files as $key => $file) {
+                    if ($file->isValid()) {
+                        Log::info("File #{$key}:", [
+                            'original_name' => $file->getClientOriginalName(),
+                            'size' => $file->getSize(),
+                        ]);
+                    } else {
+                        Log::info("File #{$key} is invalid:", [
+                            'error' => $file->getError(),
+                            'error_message' => $file->getErrorMessage(),
+                        ]);
+                    }
+                }
+            } else {
+                Log::info('`images` is not an array, it is a single file.');
+            }
+        } else {
+            Log::info('`images` field is NOT present or not a file.');
         }
 
-        $product = Product::create($validated);
+        $validated = $request->validate([
+            'title' => 'required|string|max:100',
+            'description' => 'nullable|string',
+            'price' => 'required|numeric',
+            'stock' => 'required|integer',
+            'category_id' => 'required|exists:categories,id',
+            'images' => 'nullable|array',
+            'images.*' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+        ]);
+        Log::info('Validation passed.');
 
-        // بقية الصور كمعرض
+        // 1. Create product with main data
+        $product = Product::create($request->except('images'));
+        Log::info('Product created with ID: ' . $product->id);
+
+        // 2. Handle image uploads
         if ($request->hasFile('images')) {
             $files = $request->file('images');
-            for ($i = 1; $i < count($files); $i++) {
-                $path = $files[$i]->store('products', 'public');
+            if (!is_array($files)) {
+                $files = [$files];
+            }
+
+            $firstImagePath = null;
+
+            foreach ($files as $key => $file) {
+                Log::info("Processing file #{$key}: {$file->getClientOriginalName()}");
+                $path = $file->store('products', 'public');
+                Log::info("File stored at path: {$path}");
                 $product->images()->create(['image_path' => $path]);
+                Log::info("Database record created for image path: {$path}");
+
+                if ($key === 0) {
+                    $firstImagePath = $path;
+                }
+            }
+
+            // 3. Set the main image url
+            if ($firstImagePath) {
+                $product->image_url = $firstImagePath;
+                $product->save();
+                Log::info("Main image_url set to: {$firstImagePath}");
             }
         }
 
         if ($request->wantsJson()) {
+            $product->load('images', 'category');
             return response()->json([
-                'message' => '✅ تمت إضافة المنتج بنجاح',
-                'data'    => $this->transformProduct($product->load(['images','category']))
-            ], 201, [], JSON_UNESCAPED_UNICODE);
+                'message' => 'Product created successfully.',
+                'data' => $this->transformProduct($product)
+            ]);
         }
 
-        return redirect()->route('admin.products')->with('success', '✅ تمت إضافة المنتج بنجاح');
+        return redirect()->route('admin.products')->with('success', 'Product created successfully.');
     }
 
     /**
-     * صفحة تعديل منتج (Blade فقط)
+     * Show the form for editing the specified resource.
      */
     public function edit(Product $product)
     {
@@ -115,57 +160,66 @@ class ProductController extends Controller
     }
 
     /**
-     * تحديث منتج
+     * Update the specified resource in storage.
      */
     public function update(Request $request, Product $product)
     {
-        $data = $request->validate([
-            'title'       => 'sometimes|string',
+        $validated = $request->validate([
+            'title' => 'sometimes|string|max:100',
             'description' => 'nullable|string',
-            'price'       => 'nullable|numeric',
-            'stock'       => 'nullable|integer',
+            'price' => 'nullable|numeric',
+            'stock' => 'nullable|integer',
             'category_id' => 'nullable|exists:categories,id',
-            'images'      => 'nullable|array',
-            'images.*'    => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048'
+            'images' => 'nullable|array',
+            'images.*' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048'
         ]);
 
+        // 1. Update main product data
+        $product->fill($request->except('images', '_method'));
+        $product->save();
+
+        // 2. Handle image uploads (replace existing)
         if ($request->hasFile('images')) {
-            $files = $request->file('images');
-
-            // حدّث الصورة الرئيسية
-            if (isset($files[0])) {
-                if ($product->image_url) {
-                    Storage::disk('public')->delete($product->image_url);
-                }
-                $path = $files[0]->store('products', 'public');
-                $data['image_url'] = $path;
-            }
-
-            // استبدال معرض الصور كاملاً (تبسيطًا)
+            // Delete all old images
             foreach ($product->images as $image) {
                 Storage::disk('public')->delete($image->image_path);
                 $image->delete();
             }
-            for ($i = 1; $i < count($files); $i++) {
-                $path = $files[$i]->store('products', 'public');
-                $product->images()->create(['image_path' => $path]);
-            }
-        }
 
-        $product->update($data);
+            // Upload new images
+            $files = $request->file('images');
+            if (!is_array($files)) {
+                $files = [$files];
+            }
+
+            $firstImagePath = null;
+            foreach ($files as $key => $file) {
+                $path = $file->store('products', 'public');
+                $product->images()->create(['image_path' => $path]);
+
+                if ($key === 0) {
+                    $firstImagePath = $path;
+                }
+            }
+
+            // Set the new main image url
+            $product->image_url = $firstImagePath;
+            $product->save();
+        }
 
         if ($request->wantsJson()) {
+            $product->load('images', 'category');
             return response()->json([
-                'message' => '✅ تم تحديث المنتج بنجاح',
-                'data'    => $this->transformProduct($product->load(['images','category']))
-            ], 200, [], JSON_UNESCAPED_UNICODE);
+                'message' => 'Product updated successfully.',
+                'data' => $this->transformProduct($product)
+            ]);
         }
 
-        return redirect()->route('admin.products')->with('success', '✅ تم تحديث المنتج بنجاح');
+        return redirect()->route('admin.products')->with('success', 'Product updated successfully.');
     }
 
     /**
-     * حذف منتج
+     * Remove the specified resource from storage.
      */
     public function destroy(Request $request, Product $product)
     {
@@ -179,73 +233,87 @@ class ProductController extends Controller
         $product->delete();
 
         if ($request->wantsJson()) {
-            return response()->json(['message' => '🗑 تم حذف المنتج بنجاح'], 200, [], JSON_UNESCAPED_UNICODE);
+            return response()->json(['message' => 'Product deleted successfully.']);
         }
 
-        return redirect()->route('admin.products')->with('success', '🗑 تم حذف المنتج بنجاح');
+        return redirect()->route('admin.products')->with('success', 'Product deleted successfully.');
     }
 
     /**
-     * API: قائمة المنتجات للواجهة
+     * API: Product list for the frontend
      * GET /api/frontend/products
      */
     public function apiIndex(Request $request)
     {
-        $products = Product::with(['category','images'])
-            ->when($request->has('keyword'), fn($q) => $q->where('title', 'like', '%' . $request->keyword . '%'))
-            ->when($request->has('category'), fn($q) => $q->where('category_id', $request->category))
-            ->when($request->has('min_price'), fn($q) => $q->where('price', '>=', $request->min_price))
-            ->when($request->has('max_price'), fn($q) => $q->where('price', '<=', $request->max_price))
-            ->get();
+        $query = Product::with(['category', 'images']);
+
+        if ($request->has('search')) {
+            $query->where('title', 'like', '%' . $request->search . '%');
+        }
+
+        if ($request->has('category') && $request->category) {
+            $query->where('category_id', $request->category);
+        }
+
+        if ($request->has('min_price')) {
+            $query->where('price', '>=', $request->min_price);
+        }
+
+        if ($request->has('max_price')) {
+            $query->where('price', '<=', $request->max_price);
+        }
+
+        $products = $query->get();
 
         $data = $products->map(fn($p) => $this->transformProduct($p));
 
-        return response()->json(['data' => $data], 200, [], JSON_UNESCAPED_UNICODE);
+        return response()->json(['data' => $data]);
     }
 
     /**
-     * API: تفاصيل منتج واحد للواجهة
+     * API: Single product details for the frontend
      * GET /api/frontend/products/{product}
      */
     public function apiShow(Product $product)
     {
-        $product->load(['category','images']);
-        return response()->json(['data' => $this->transformProduct($product)], 200, [], JSON_UNESCAPED_UNICODE);
+        $product->load(['category', 'images']);
+        return response()->json(['data' => $this->transformProduct($product)]);
     }
 
     /**
-     * محوّل يوحّد شكل المنتج ويضمن URL مطلقة للصور
+     * Transformer to unify product shape and ensure absolute URLs for images
      */
     private function transformProduct(Product $p): array
     {
-        // URL مطلق للصورة الرئيسية:
+        // Absolute URL for the main image:
         $mainUrl = $p->image_url
-            ? url('storage/' . ltrim($p->image_url, '/'))  // products/.. -> http://.../storage/products/..
+            ? url('storage/' . ltrim($p->image_url, '/'))
             : (optional($p->images->first())->image_path
                 ? url('storage/' . $p->images->first()->image_path)
                 : null);
 
-        // معرض الصور
+        // Image gallery
         $images = $p->images->map(function ($img) {
             $url = !empty($img->url) ? $img->url : url('storage/' . ltrim($img->image_path, '/'));
             return [
-                'id'  => $img->id,
+                'id' => $img->id,
                 'url' => $url,
             ];
         })->values();
 
         return [
-            'id'          => $p->id,
-            'title'       => $p->title,
+            'id' => $p->id,
+            'title' => $p->title,
             'description' => $p->description,
-            'price'       => $p->price,
-            'discount'    => $p->discount,
-            'rating'      => $p->rating,
-            'stock'       => $p->stock,
+            'price' => $p->price,
+            'discount' => $p->discount,
+            'rating' => $p->rating,
+            'stock' => $p->stock,
             'category_id' => $p->category_id,
-            'category'    => $p->relationLoaded('category') ? ($p->category?->name) : null,
-            'image_url'   => $mainUrl,
-            'images'      => $images,
+            'category' => $p->relationLoaded('category') ? ($p->category?->name) : null,
+            'image_url' => $mainUrl,
+            'images' => $images,
         ];
     }
+
 }

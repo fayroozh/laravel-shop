@@ -25,24 +25,42 @@ class FeedbackController extends Controller
     /**
      * Store a newly created resource in storage.
      */
+    // GET feedbacks
+    public function apiIndex()
+    {
+        $feedbacks = Feedback::with('user')->latest()->get();
+        return response()->json($feedbacks);
+    }
+
+    // POST feedback
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'feedback' => 'required|string'
+            'name' => 'required|string|max:255',
+            'feedback' => 'required|string',
         ]);
 
-        $feedback = $request->user()->feedback()->create([
+        $feedbackData = [
+            'name' => $validated['name'],
             'feedback' => $validated['feedback'],
-            'name' => $request->user()->name,
-        ]);
+        ];
 
-        // Notify admin
+        // إذا المستخدم مسجل دخول
+        if (auth('sanctum')->check()) {
+            $user = auth('sanctum')->user();
+            $feedbackData['user_id'] = $user->id;
+            $feedbackData['name'] = $user->name; // override name
+        }
+
+        $feedback = Feedback::create($feedbackData);
+
+        // إرسال إشعار للأدمن
         $admin = User::where('is_admin', true)->first();
         if ($admin) {
             Notification::create([
                 'user_id' => $admin->id,
                 'title' => 'New Feedback Received',
-                'message' => "New feedback has been submitted by {$request->user()->name}.",
+                'message' => "New feedback has been submitted by {$feedbackData['name']}.",
                 'type' => 'info',
             ]);
         }
@@ -52,6 +70,7 @@ class FeedbackController extends Controller
             'feedback' => $feedback
         ], 201);
     }
+
 
 
     /**
@@ -83,6 +102,7 @@ class FeedbackController extends Controller
      */
     public function destroy(Feedback $feedback)
     {
-        //
+        $feedback->delete();
+        return redirect()->route('admin.feedback')->with('success', 'Feedback deleted successfully.');
     }
 }

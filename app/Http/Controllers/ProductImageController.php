@@ -12,13 +12,19 @@ class ProductImageController extends Controller
     public function store(Request $request, Product $product)
     {
         $request->validate([
-            'images.*' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048'
+            'images' => 'required',
+            'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048'
         ]);
+
+        $images = $request->file('images');
+        if (!is_array($images)) {
+            $images = [$images];
+        }
 
         $paths = [];
 
-        foreach ($request->file('images') as $image) {
-            $path = $image->store('product_images', 'public');
+        foreach ($images as $image) {
+            $path = $image->store('products', 'public');
             ProductImage::create([
                 'product_id' => $product->id,
                 'image_path' => $path
@@ -36,5 +42,15 @@ class ProductImageController extends Controller
         return redirect()->back()->with('success', 'Images uploaded successfully');
     }
 
-}
+    public function destroy(ProductImage $image)
+    {
+        Storage::disk('public')->delete($image->image_path);
+        $image->delete();
 
+        if (request()->wantsJson()) {
+            return response()->json(['message' => 'Image deleted successfully']);
+        }
+        return redirect()->back()->with('success', 'Image deleted successfully');
+    }
+
+}

@@ -20,7 +20,7 @@ const ProductImageGallery = ({ product }) => {
   return (
     <motion.div custom={-1} variants={slideInVariants} className="space-y-4">
       {/* الصورة الرئيسية */}
-      <div className="aspect-square rounded-lg overflow-hidden bg-gray-100">
+      <div className="aspect-square rounded-lg overflow-hidden bg-gray-100 h-80">
         <img
           src={main || fallback}
           alt={product?.title || "Product"}
@@ -31,7 +31,7 @@ const ProductImageGallery = ({ product }) => {
 
       {/* الصور المصغرة */}
       {thumbs.length > 1 && (
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-4 gap-4 ">
           {thumbs.slice(0, 4).map((src, index) => (
             <div
               key={index}

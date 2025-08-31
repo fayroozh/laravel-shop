@@ -20,7 +20,7 @@ function Categories() {
   const fetchCategories = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API_URL}/categories`);
+      const response = await axios.get(`${API_URL}/frontend/categories`);
       setCategories(response.data);
       setLoading(false);
     } catch (error) {
@@ -100,17 +100,17 @@ function Categories() {
     <div className="p-4">
       <div className="dashboard-header mb-6 flex justify-between items-center">
         <h1 className="text-2xl font-bold">🗂️ الفئات</h1>
-        <button 
+        <button
           onClick={() => {
             resetForm();
             openModal("addCategoryModal");
-          }} 
+          }}
           className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
         >
           ➕ إضافة فئة
         </button>
       </div>
-      
+
       {successMessage && (
         <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
           {successMessage}
@@ -168,8 +168,8 @@ function Categories() {
         <div className="bg-white p-6 rounded-lg w-full max-w-md">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold">{editMode ? "تعديل الفئة" : "إضافة فئة جديدة"}</h2>
-            <button 
-              onClick={() => closeModal("addCategoryModal")} 
+            <button
+              onClick={() => closeModal("addCategoryModal")}
               className="text-gray-500 hover:text-gray-700"
             >
               &times;

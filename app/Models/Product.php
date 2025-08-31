@@ -40,16 +40,16 @@ class Product extends Model
         return $this->belongsToMany(Order::class)->withPivot('quantity', 'price');
     }
 
-    // إضافة العلاقة مع حركة المخزون
+    // Add relationship with inventory movement
     public function inventoryMovements()
     {
         return $this->hasMany(InventoryMovement::class);
     }
 
-    // إضافة دالة لتحديث المخزون
+    // Add function to update stock
     public function updateStock($quantity, $type, $referenceType = null, $referenceId = null, $notes = null)
     {
-        // تسجيل حركة المخزون
+        // Record inventory movement
         $this->inventoryMovements()->create([
             'quantity' => abs($quantity),
             'type' => $type,
@@ -59,14 +59,14 @@ class Product extends Model
             'user_id' => auth()->id()
         ]);
 
-        // تحديث كمية المخزون
+        // Update stock quantity
         if ($type === 'in') {
             $this->increment('stock', abs($quantity));
         } else {
             $this->decrement('stock', abs($quantity));
         }
 
-        // إذا انخفض المخزون عن الحد الأدنى، إرسال إشعار
+        // If stock drops below the minimum, send a notification
         if ($this->stock <= $this->min_stock && $this->min_stock > 0) {
             $this->sendLowStockNotification();
         }
@@ -74,10 +74,10 @@ class Product extends Model
         return $this;
     }
 
-    // إضافة دالة لإرسال إشعار انخفاض المخزون
+    // Add function to send low stock notification
     protected function sendLowStockNotification()
     {
-        // إرسال إشعار للمستخدمين الذين لديهم صلاحية إدارة المخزون
+        // Send notification to users with permission to manage inventory
         $users = \App\Models\User::whereHas('roles.permissions', function ($query) {
             $query->where('name', 'edit_products');
         })->get();

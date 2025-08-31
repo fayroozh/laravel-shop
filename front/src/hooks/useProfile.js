@@ -1,10 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import apiClient from "../services/api-client";
+import authClient from "../services/auth-client";
 import useAuthStore from "../app/authStore";
 
 
 const useProfile = () => {
-  const {token}=useAuthStore()
+  const { token } = useAuthStore()
   const {
     data,
     isLoading,
@@ -14,7 +14,7 @@ const useProfile = () => {
   } = useQuery({
     queryKey: ["profile"],
     queryFn: () =>
-      apiClient.get("/auth/me").then((res) => res.data),
+      authClient.get("/auth/me").then((res) => res.data),
   });
 
   return {

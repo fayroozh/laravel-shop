@@ -10,17 +10,17 @@ const ProductCard = ({ project, addToCart }) => {
       transition={{ duration: 0.5 }}
       className="h-full"
     >
-      <motion.div
-        className="product-card"
-        whileHover={{ y: -5 }}
-      >
-        <div className="relative overflow-hidden group ">
+      <motion.div className="product-card" whileHover={{ y: -5 }}>
+        <div className="relative overflow-hidden group">
           <motion.img
-            className="img-product"
+            className="img-product w-full h-60 object-cover"
             src={project.image_url}
             alt={project.title}
             whileHover={{ scale: 1.05 }}
           />
+
+
+
           <div className="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
             <Link
               to={`/product/${project.id}`}
@@ -38,6 +38,9 @@ const ProductCard = ({ project, addToCart }) => {
           <p className="text-gray-600 dark:text-gray-300 line-clamp-3 mb-4">
             {project.description}
           </p>
+          <span className="text-2xl font-bold text-indigo-600">
+            ${project.price}
+          </span>
         </div>
 
         <div className="px-6 pb-6">

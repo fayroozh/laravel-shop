@@ -52,12 +52,12 @@ const FeaturedProducts = ({ handleProductClick, handleAddToCart }) => {
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
             </div>
-            <div className="p-6">
+            <div className="p-6 ">
               <h3 className="text-xl font-bold mb-3 text-gray-800">{product.name}</h3>
               <p className="text-gray-600 mb-4 line-clamp-2">{product.description}</p>
-              <div className="flex justify-between items-center">
-                <span className="text-2xl font-bold text-indigo-600">${product.price}</span>
-                <button
+              <div className="flex justify-center items-center">
+                <span className="text-2xl font-bold  text-indigo-600 ">${product.price}</span>
+                {/* <button
                   onClick={(e) => {
                     e.stopPropagation();
                     handleAddToCart(product);
@@ -65,7 +65,7 @@ const FeaturedProducts = ({ handleProductClick, handleAddToCart }) => {
                   className="bg-indigo-600 text-white px-6 py-2 rounded-full font-semibold hover:bg-indigo-700 transition-colors transform hover:scale-105"
                 >
                   Add to Cart
-                </button>
+                </button> */}
               </div>
             </div>
           </motion.div>

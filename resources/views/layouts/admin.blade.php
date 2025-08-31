@@ -1,172 +1,24 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr" data-theme="{{ $theme ?? 'light' }}">
+<html lang="en" dir="ltr">
 
 <head>
     <meta charset="UTF-8">
     <title>BRIFKTHAR</title>
     <link rel="icon" type="image/png" href="{{ asset('images/logo.png') }}">
+    @stack('styles')
     <style>
         :root {
-            --primary-color: #2c3e50;
-            --secondary-color: #34495e;
-            --accent-color: #3498db;
-            --success-color: #2ecc71;
-            --warning-color: #f39c12;
-            --danger-color: #e74c3c;
-            --bg-color: #f4f4f4;
-            --card-bg: #ffffff;
-            --text-color: #2c3e50;
-            --border-color: #eee;
-            --sidebar-width: 250px;
-        }
-
-        /* Search Section Styles */
-        .search-section {
-            margin-bottom: 25px;
-            padding: 20px;
-        }
-
-        .search-fields {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            align-items: end;
-        }
-
-        .form-group {
-            margin-bottom: 0;
-        }
-
-        /* Charts Grid */
-        .charts-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
-            gap: 30px;
-            margin: 30px 0;
-        }
-
-        .chart-card {
-            background: var(--card-bg);
-            border-radius: 15px;
-            padding: 25px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            height: 100%;
-        }
-
-        .chart-card canvas {
-            width: 100% !important;
-            height: 300px !important;
-        }
-
-        .chart-card h3 {
-            margin-bottom: 15px;
-            color: var(--text-color);
-        }
-
-        /* Data Table Styles */
-        .data-table {
-            margin: 20px 0;
-            background: var(--card-bg);
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            overflow-x: auto;
-        }
-
-        .styled-table {
-            width: 100%;
-            border-collapse: separate;
-            border-spacing: 0;
-            margin: 20px 0;
-        }
-
-        .styled-table th,
-        .styled-table td {
-            padding: 15px;
-            text-align: left;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .styled-table th {
-            background-color: var(--primary-color);
-            color: white;
-            font-weight: 600;
-        }
-
-        .styled-table tr:last-child td {
-            border-bottom: none;
-        }
-
-        /* Status Colors */
-        .status-high {
-            color: var(--success-color);
-        }
-
-        .status-normal {
-            color: var(--accent-color);
-        }
-
-        .status-low {
-            color: var(--danger-color);
-        }
-
-        /* Type Colors */
-        .type-new {
-            color: var(--accent-color);
-        }
-
-        .type-regular {
-            color: var(--success-color);
-        }
-
-        .type-vip {
-            color: var(--warning-color);
-        }
-
-        /* Breadcrumb Navigation */
-        .breadcrumb {
-            display: flex;
-            align-items: center;
-            margin-bottom: 20px;
-            padding: 10px;
-            background: var(--card-bg);
-            border-radius: 8px;
-        }
-
-        .breadcrumb-item {
-            display: flex;
-            align-items: center;
-        }
-
-        .breadcrumb-item:not(:last-child)::after {
-            content: '/';
-            margin: 0 10px;
-            color: var(--text-color);
-            opacity: 0.5;
-        }
-
-        .breadcrumb-item a {
-            color: var(--accent-color);
-            text-decoration: none;
-        }
-
-        .breadcrumb-item.active {
-            color: var(--text-color);
-        }
-
-        [data-theme="dark"] {
-            --primary-color: #1a252f;
-            --secondary-color: #2c3e50;
+            --primary-color: #ffffff;
+            --secondary-color: #f8f9fa;
             --accent-color: #3498db;
             --success-color: #27ae60;
             --warning-color: #e67e22;
             --danger-color: #c0392b;
-            --bg-color: #121212;
-            --card-bg: #1e1e1e;
-            --text-color: #ffffff;
-            --border-color: #333;
+            --bg-color: #ffffff;
+            --card-bg: #ffffff;
+            --text-color: #000000;
+            --border-color: #dee2e6;
         }
-
         /* تحسينات خاصة بصفحة الطلبات */
         .dashboard-header {
             display: flex;
@@ -282,11 +134,11 @@
             margin: 0 20px 30px;
             text-align: center;
             padding-bottom: 20px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            border-bottom: 1px solid var(--border-color);
             white-space: nowrap;
             /* Keep "Admin Dashboard" on one line */
-            color: white;
-            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+            color: #000000;
+            text-shadow: none;
             letter-spacing: 1px;
             display: flex;
             align-items: center;
@@ -294,7 +146,7 @@
 
         .sidebar a {
             display: block;
-            color: rgba(255, 255, 255, 0.9);
+            color: #000000;
             text-decoration: none;
             padding: 12px 20px;
             margin: 2px 10px;
@@ -315,7 +167,7 @@
             left: -100%;
             width: 100%;
             height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.1), transparent);
             transition: all 0.5s ease;
             z-index: -1;
         }
@@ -325,8 +177,8 @@
         }
 
         .sidebar a:hover {
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
+            background: rgba(0, 0, 0, 0.1);
+            color: #000000;
             transform: translateX(5px);
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
             letter-spacing: 0.5px;
@@ -354,52 +206,7 @@
             /* Add space from sidebar */
         }
 
-        .dashboard-actions {
-            display: flex;
-            gap: 10px;
-        }
 
-        .btn-export,
-        .btn-theme {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: all 0.3s ease;
-        }
-
-        .btn-pdf {
-            background: linear-gradient(135deg, #e74c3c, #c0392b);
-            color: white;
-        }
-
-        .btn-excel {
-            background: linear-gradient(135deg, #27ae60, #229954);
-            color: white;
-        }
-
-        .btn-theme {
-            background: linear-gradient(135deg, #8e44ad, #9b59b6);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            padding: 14px 20px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-            margin-top: 25px;
-            width: 100%;
-            letter-spacing: 0.5px;
-        }
-
-        .btn-theme:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
-            background: linear-gradient(135deg, #9b59b6, #8e44ad);
-            letter-spacing: 1px;
-        }
 
         .stats-grid {
             display: grid;
@@ -670,16 +477,16 @@
         }
 
         :root {
-            --primary-color: #2c3e50;
-            --secondary-color: #34495e;
+            --primary-color: #000000;
+            --secondary-color: #333333;
             --accent-color: #3498db;
             --success-color: #2ecc71;
             --warning-color: #f39c12;
             --danger-color: #e74c3c;
-            --bg-color: #f4f4f4;
+            --bg-color: #ffffff;
             --card-bg: #ffffff;
-            --text-color: #2c3e50;
-            --border-color: #eee;
+            --text-color: #000000;
+            --border-color: #dddddd;
             --sidebar-width: 250px;
         }
 
@@ -817,18 +624,7 @@
             color: var(--text-color);
         }
 
-        [data-theme="dark"] {
-            --primary-color: #1a252f;
-            --secondary-color: #2c3e50;
-            --accent-color: #3498db;
-            --success-color: #27ae60;
-            --warning-color: #e67e22;
-            --danger-color: #c0392b;
-            --bg-color: #121212;
-            --card-bg: #1e1e1e;
-            --text-color: #ffffff;
-            --border-color: #333;
-        }
+
 
         /* تحسينات خاصة بصفحة الطلبات */
         .dashboard-header {
@@ -1988,21 +1784,18 @@
     <!-- Sidebar -->
     <div class="sidebar">
         <h2>👑 Admin Dashboard</h2>
-        <a href="{{ route('admin.dashboard') }}">📊 Statistics</a>
+        <a href="{{ route('admin.dashboard') }}">📊 Dashboard</a>
         <a href="{{ route('admin.products') }}">📦 Products</a>
         <a href="{{ route('admin.categories') }}">🗂 Categories</a>
-        <a href="{{ route('admin.employees') }}">👥 Employees</a>
-        <a href="{{ route('admin.suppliers') }}">🏭 Suppliers</a>
+        <a href="{{ route('admin.employees') }}">👥 Human Resources</a>
         <a href="{{ route('admin.orders') }}">🛒 Orders</a>
         <a href="{{ route('admin.feedback') }}">📝 Feedback</a>
-        <a href="{{ route('admin.users') }}">👤 Users</a>
+        <a href="{{ route('admin.users') }}">👤 customer</a>
         <a href="{{ route('admin.notifications.index') }}">🔔 Notifications</a>
         <a href="{{ route('admin.activities') }}">🕒 Activities</a>
         <a href="{{ route('admin.reports.index') }}">📈 Reports</a>
         <a href="{{ route('admin.roles.index') }}">🔐 Roles</a>
-        <div class="theme-toggle-container">
-            <button onclick="toggleTheme()" id="themeToggle">🌙 Dark Mode</button>
-        </div>
+
     </div>
 
     <!-- Topbar -->
@@ -2028,37 +1821,7 @@
         @yield('content')
     </div>
 
-    <!-- Theme Customizer -->
-    <div class="theme-customizer" id="themeCustomizer">
-        <div class="customizer-toggle" onclick="toggleCustomizer()">🎨</div>
-        <h3>Theme Settings</h3>
-        <div class="theme-mode">
-            <h4>Mode</h4>
-            <div class="form-check">
-                <input type="radio" name="theme-mode" id="lightMode" checked onclick="setThemeMode('light')">
-                <label for="lightMode">Light Mode</label>
-            </div>
-            <div class="form-check">
-                <input type="radio" name="theme-mode" id="darkMode" onclick="setThemeMode('dark')">
-                <label for="darkMode">Dark Mode</label>
-            </div>
-        </div>
-        <div class="color-customizer">
-            <h4>Colors</h4>
-            <div class="color-option">
-                <div class="color-preview" style="background-color: var(--accent-color);"></div>
-                <label>Accent Color</label>
-                <input type="color" id="accentColor" value="#3498db" onchange="updateColor('accent-color', this.value)">
-            </div>
-            <div class="color-option">
-                <div class="color-preview" style="background-color: var(--primary-color);"></div>
-                <label>Primary Color</label>
-                <input type="color" id="primaryColor" value="#0d6efd"
-                    onchange="updateColor('primary-color', this.value)">
-            </div>
-        </div>
-        <button onclick="saveThemeSettings()">Save Settings</button>
-    </div>
+
 
     <!-- Example modal -->
     <div class="modal" id="exampleModal">
@@ -2103,21 +1866,7 @@
             window.addEventListener('click', e => { if (!e.target.matches('.notification-btn') && !e.target.closest('.notification-dropdown-content')) dd?.classList.remove('show'); });
         });
 
-        // ======================
-        // Theme
-        // ======================
-        function toggleTheme() { document.body.classList.toggle('dark-theme'); const t = document.getElementById('themeToggle'); if (document.body.classList.contains('dark-theme')) { t.textContent = '☀ Light Mode'; localStorage.setItem('theme', 'dark'); document.getElementById('darkMode').checked = true; } else { t.textContent = '🌙 Dark Mode'; localStorage.setItem('theme', 'light'); document.getElementById('lightMode').checked = true; } }
-        function toggleCustomizer() { document.getElementById('themeCustomizer').classList.toggle('open'); }
-        function setThemeMode(mode) { if (mode === 'dark' && !document.body.classList.contains('dark-theme')) toggleTheme(); if (mode === 'light' && document.body.classList.contains('dark-theme')) toggleTheme(); }
-        function updateColor(property, value) { document.documentElement.style.setProperty(`--${property}`, value); }
-        function saveThemeSettings() { localStorage.setItem('accent-color', document.getElementById('accentColor').value); localStorage.setItem('primary-color', document.getElementById('primaryColor').value); alert('Theme settings saved!'); }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            const savedTheme = localStorage.getItem('theme');
-            if (savedTheme === 'dark') { document.body.classList.add('dark-theme'); document.getElementById('themeToggle').textContent = '☀ Light Mode'; document.getElementById('darkMode').checked = true; }
-            const savedAccent = localStorage.getItem('accent-color'); if (savedAccent) { document.documentElement.style.setProperty('--accent-color', savedAccent); document.getElementById('accentColor').value = savedAccent; }
-            const savedPrimary = localStorage.getItem('primary-color'); if (savedPrimary) { document.documentElement.style.setProperty('--primary-color', savedPrimary); document.getElementById('primaryColor').value = savedPrimary; }
-        });
 
         // ======================
         // Modals

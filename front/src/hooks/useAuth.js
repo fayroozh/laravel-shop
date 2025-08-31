@@ -8,7 +8,7 @@ export const useAuth = () => {
     const { setToken, setUser } = useAuthStore();
     const navigate = useNavigate();
 
-    // تسجيل الدخول
+    // Login
     const loginMutation = useMutation({
         mutationFn: (credentials) =>
             authClient
@@ -21,48 +21,40 @@ export const useAuth = () => {
             setToken(data.token);
             setUser(data.user);
 
-            // توجيه المستخدم دائمًا إلى الصفحة الرئيسية بعد تسجيل الدخول
+            // Always redirect the user to the homepage after login
             navigate("/");
 
             if (data.user.email === 'admin@example.com') {
-                toast.success("تم تسجيل الدخول بنجاح كمسؤول!");
+                toast.success("Logged in successfully as Admin!");
             } else {
-                toast.success("تم تسجيل الدخول بنجاح!");
+                toast.success("Logged in successfully!");
             }
         },
         onError: (error) => {
-            toast.error("فشل تسجيل الدخول. تأكد من البيانات.");
+            toast.error("Login failed. Please check your credentials.");
             console.error("Login error:", error);
         },
     });
 
-    // تسجيل مستخدم جديد
-    // تغيير مسار CSRF cookie
+    // Register a new user
     const registerMutation = useMutation({
         mutationFn: async (userData) => {
-            try {
-                // جلب CSRF Token من المسار الصحيح
-                await authClient.get("/sanctum/csrf-cookie");
-
-                await new Promise(resolve => setTimeout(resolve, 2000));
-
-                const response = await authClient.post("/register", userData);
-                return response.data;
-            } catch (error) {
-                console.error("Registration error:", error);
-                throw error;
-            }
+            await authClient.get("/sanctum/csrf-cookie");
+            const response = await authClient.post("/register", userData);
+            return response.data;
         },
-        onSuccess: () => {
-            toast.success("تم التسجيل بنجاح! يمكنك الآن تسجيل الدخول.");
-            navigate("/login");
+        onSuccess: (data) => {
+            setToken(data.token);
+            setUser(data.user);
+            navigate("/");
+            toast.success("Registration successful! Welcome to our platform.");
         },
         onError: (error) => {
-            toast.error("فشل التسجيل. تأكد من صحة البيانات.");
+            toast.error("Registration failed. Please check the provided data.");
         }
     });
 
-    // تسجيل الخروج
+    // Logout
     const logoutMutation = useMutation({
         mutationFn: () => {
             return authClient.post("/logout");
@@ -70,13 +62,13 @@ export const useAuth = () => {
         onSuccess: () => {
             setToken(null);
             navigate("/login");
-            toast.success("تم تسجيل الخروج بنجاح!");
+            toast.success("Logged out successfully!");
         },
         onError: (error) => {
             console.error("Logout error:", error);
             setToken(null);
             navigate("/login");
-            toast.success("تم تسجيل الخروج بنجاح!");
+            toast.success("Logged out successfully!");
         },
     });
 

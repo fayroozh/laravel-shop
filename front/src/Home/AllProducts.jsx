@@ -59,11 +59,11 @@ const AllProducts = ({ handleProductClick, handleAddToCart }) => {
               <p className="text-gray-600 text-sm mb-4 line-clamp-2">
                 {product.description}
               </p>
-              <div className="flex justify-between items-center">
+              <div className="flex justify-center items-center">
                 <span className="text-lg font-bold text-indigo-600">
                   ${product.price}
                 </span>
-                <button
+                {/* <button
                   onClick={(e) => {
                     e.stopPropagation();
                     handleAddToCart(product);
@@ -71,7 +71,7 @@ const AllProducts = ({ handleProductClick, handleAddToCart }) => {
                   className="bg-indigo-600 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-indigo-700 transition-colors transform hover:scale-105"
                 >
                   Add to Cart
-                </button>
+                </button> */}
               </div>
             </div>
           </motion.div>

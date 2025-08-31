@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
 import useAuthStore from "../../app/authStore";
-import { apiClient } from "../../services/api-client";
+import { apiClient, authClient } from "../../services/api-client";
 
 const STORAGE_KEY = "theme";
 const ThemeCtx = createContext(null);
@@ -40,10 +40,19 @@ export function ThemeProvider({ children }) {
         const newIsDark = newTheme === 'dark';
         setIsDark(newIsDark);
         localStorage.setItem(STORAGE_KEY, newTheme);
-        if (token) {
+
+        // فقط إذا كان المستخدم مسجل دخول، نحاول حفظ التفضيل في الخادم
+        if (token && setUserTheme) {
             setUserTheme(newTheme);
-            apiClient.post('/update-theme', { theme: newTheme })
-                .catch(err => console.error("Failed to update theme on server:", err));
+            try {
+                authClient.post('/update-theme', { theme: newTheme })
+                    .catch(err => {
+                        console.error("Failed to update theme on server:", err);
+                        // حتى لو فشل الحفظ في الخادم، التغيير المحلي سيظل يعمل
+                    });
+            } catch (err) {
+                console.error("Error updating theme:", err);
+            }
         }
     }, [token, setUserTheme]);
 

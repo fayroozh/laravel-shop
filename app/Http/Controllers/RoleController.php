@@ -14,7 +14,7 @@ class RoleController extends Controller
         $permissions = Permission::all()->groupBy('group');
         return view('admin.roles.index', compact('roles', 'permissions'));
     }
-    
+
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -24,19 +24,19 @@ class RoleController extends Controller
             'permissions' => 'required|array',
             'permissions.*' => 'exists:permissions,id'
         ]);
-        
+
         $role = Role::create([
             'name' => $validated['name'],
             'display_name' => $validated['display_name'],
             'description' => $validated['description'] ?? $validated['display_name'],
         ]);
-        
+
         $role->permissions()->attach($validated['permissions']);
-        
+
         return redirect()->route('admin.roles.index')
-            ->with('success', 'تم إنشاء الدور بنجاح');
+            ->with('success', 'Role created successfully');
     }
-    
+
     public function update(Request $request, Role $role)
     {
         $validated = $request->validate([
@@ -45,29 +45,28 @@ class RoleController extends Controller
             'permissions' => 'required|array',
             'permissions.*' => 'exists:permissions,id'
         ]);
-        
+
         $role->update([
             'display_name' => $validated['display_name'],
             'description' => $validated['description'] ?? $validated['display_name'],
         ]);
-        
+
         $role->permissions()->sync($validated['permissions']);
-        
+
         return redirect()->route('admin.roles.index')
-            ->with('success', 'تم تحديث الدور بنجاح');
+            ->with('success', 'Role updated successfully');
     }
-    
+
     public function destroy(Role $role)
     {
-        // منع حذف دور Super Admin
         if ($role->name === 'super_admin') {
             return redirect()->route('admin.roles.index')
-                ->with('error', 'لا يمكن حذف دور المدير العام');
+                ->with('error', 'Cannot delete Super Admin role');
         }
-        
+
         $role->delete();
-        
+
         return redirect()->route('admin.roles.index')
-            ->with('success', 'تم حذف الدور بنجاح');
+            ->with('success', 'Role deleted successfully');
     }
 }

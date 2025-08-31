@@ -66,11 +66,10 @@ const OrderHistory = ({ userId, token }) => {
                 <div className="text-right">
                   <p className="font-semibold">${Number(order.total).toFixed(2)}</p>
                   <span
-                    className={`px-2 py-1 text-xs rounded-full ${
-                      order.status === "Delivered"
+                    className={`px-2 py-1 text-xs rounded-full ${order.status === "Delivered"
                         ? "bg-green-200 text-green-800"
                         : "bg-yellow-200 text-yellow-800"
-                    }`}
+                      }`}
                   >
                     {order.status}
                   </span>
@@ -94,6 +93,12 @@ const ProfilePage = () => {
 
   if (isLoading) return <LoadingSpinner />;
   if (error) return <ErrorMessage error={error.message || "Failed to load profile."} />;
+
+  const nameParts = profile?.name ? profile.name.split(' ') : ['', ''];
+  const firstName = nameParts[0];
+  const lastName = nameParts.slice(1).join(' ');
+
+  
 
   const InfoField = ({ icon, label, value }) => (
     <motion.div
@@ -127,17 +132,17 @@ const ProfilePage = () => {
               <img
                 src={
                   profile?.avatar ||
-                  `https://ui-avatars.com/api/?name=${profile?.firstName}+${profile?.lastName}&background=random`
+                  `https://ui-avatars.com/api/?name=${firstName}+${lastName}&background=random`
                 }
                 alt="Profile"
                 className="w-24 h-24 rounded-full object-cover border-4 border-blue-500"
               />
               <div>
                 <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
-                  {`${profile?.firstName || ""} ${profile?.lastName || ""}`}
+                  {`${firstName || ""} ${lastName || ""}`.trim()}
                 </h2>
                 <p className="text-gray-500 dark:text-gray-400">
-                  @{profile?.username || "username"}
+                  @{profile?.email?.split('@')[0] || "username"}
                 </p>
               </div>
             </div>
@@ -151,8 +156,8 @@ const ProfilePage = () => {
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <InfoField icon={<FiUser className="text-blue-500" />} label="First Name" value={profile?.firstName} />
-            <InfoField icon={<FiUser className="text-blue-500" />} label="Last Name" value={profile?.lastName} />
+            <InfoField icon={<FiUser className="text-blue-500" />} label="First Name" value={firstName} />
+            <InfoField icon={<FiUser className="text-blue-500" />} label="Last Name" value={lastName} />
             <InfoField icon={<FiMail className="text-purple-500" />} label="Email" value={profile?.email} />
             <InfoField
               icon={<FiLogIn className="text-green-500" />}

@@ -17,16 +17,23 @@ class RolesAndPermissionsSeeder extends Seeder
 
         // Define permissions
         $permissions = [
-            ['name' => 'edit articles', 'display_name' => 'Edit Articles', 'group' => 'articles'],
-            ['name' => 'delete articles', 'display_name' => 'Delete Articles', 'group' => 'articles'],
-            ['name' => 'publish articles', 'display_name' => 'Publish Articles', 'group' => 'articles'],
-            ['name' => 'unpublish articles', 'display_name' => 'Unpublish Articles', 'group' => 'articles'],
-            ['name' => 'read-products', 'display_name' => 'Read Products', 'group' => 'system'],
-            ['name' => 'read-orders', 'display_name' => 'Read Orders', 'group' => 'system'],
-            ['name' => 'create_employees', 'display_name' => 'Create Employees', 'group' => 'employees'],
-            ['name' => 'read_employees', 'display_name' => 'Read Employees', 'group' => 'employees'],
-            ['name' => 'update_employees', 'display_name' => 'Update Employees', 'group' => 'employees'],
-            ['name' => 'delete_employees', 'display_name' => 'Delete Employees', 'group' => 'employees'],
+            // Product Permissions
+            ['name' => 'create_products', 'display_name' => 'Create Products', 'group' => 'Products'],
+            ['name' => 'edit_products', 'display_name' => 'Edit Products', 'group' => 'Products'],
+            ['name' => 'delete_products', 'display_name' => 'Delete Products', 'group' => 'Products'],
+            ['name' => 'read_products', 'display_name' => 'Read Products', 'group' => 'Products'],
+
+            // Order Permissions
+            ['name' => 'read_orders', 'display_name' => 'Read Orders', 'group' => 'Orders'],
+
+            // Employee Permissions
+            ['name' => 'create_employees', 'display_name' => 'Create Employees', 'group' => 'Employees'],
+            ['name' => 'read_employees', 'display_name' => 'Read Employees', 'group' => 'Employees'],
+            ['name' => 'update_employees', 'display_name' => 'Update Employees', 'group' => 'Employees'],
+            ['name' => 'delete_employees', 'display_name' => 'Delete Employees', 'group' => 'Employees'],
+
+            // Financial Permissions (Placeholder)
+            ['name' => 'manage_finances', 'display_name' => 'Manage Finances', 'group' => 'Finances'],
         ];
 
         // Create or update permissions
@@ -40,29 +47,40 @@ class RolesAndPermissionsSeeder extends Seeder
         // Create or update roles
         $adminRole = Role::updateOrCreate(
             ['name' => 'admin', 'guard_name' => 'web'],
-            ['display_name' => 'المدير العام']
+            ['display_name' => 'Administrator']
         );
-        $employeeRole = Role::updateOrCreate(
-            ['name' => 'employee', 'guard_name' => 'web'],
-            ['display_name' => 'الموظف']
+        $hrRole = Role::updateOrCreate(
+            ['name' => 'human_resources', 'guard_name' => 'web'],
+            ['display_name' => 'Human Resources Manager']
+        );
+        $productManagerRole = Role::updateOrCreate(
+            ['name' => 'product_manager', 'guard_name' => 'web'],
+            ['display_name' => 'Product Manager']
         );
 
         // Assign all permissions to admin
         $adminRole->syncPermissions(Permission::all());
 
-        // Assign specific permissions to employee
-        $employeeRole->syncPermissions([
-            'read-products',
-            'read-orders',
+        // Assign specific permissions to Human Resources
+        $hrRole->syncPermissions([
             'create_employees',
             'read_employees',
             'update_employees',
             'delete_employees',
+            'manage_finances',
+        ]);
+
+        // Assign specific permissions to Product Manager
+        $productManagerRole->syncPermissions([
+            'create_products',
+            'read_products',
+            'edit_products',
+            'delete_products',
         ]);
 
         // Create admin user
         $admin = User::firstOrCreate(
-            ['email' => 'admin@g.c'],
+            ['email' => 'admin@example.com'],
             [
                 'name' => 'Admin',
                 'password' => Hash::make('password'),

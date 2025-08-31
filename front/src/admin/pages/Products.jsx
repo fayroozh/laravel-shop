@@ -26,7 +26,7 @@ export default function Products() {
       setProducts(data);
     } catch (error) {
       console.error("Error fetching products:", error);
-      setErrorMessage("حدث خطأ أثناء جلب المنتجات");
+      setErrorMessage("Error fetching products.");
       setTimeout(() => setErrorMessage(""), 3000);
     } finally {
       setLoading(false);
@@ -49,15 +49,15 @@ export default function Products() {
   };
 
   const handleDeleteProduct = async (id) => {
-    if (window.confirm("هل أنت متأكد من حذف هذا المنتج؟")) {
+    if (window.confirm("Are you sure you want to delete this product?")) {
       try {
         await adminApiClient.delete(`/products/${id}`);
-        setSuccessMessage("تم حذف المنتج بنجاح");
+        setSuccessMessage("Product deleted successfully.");
         fetchProducts();
         setTimeout(() => setSuccessMessage(""), 3000);
       } catch (error) {
         console.error("Error deleting product:", error);
-        setErrorMessage("حدث خطأ أثناء حذف المنتج");
+        setErrorMessage("Error deleting product.");
         setTimeout(() => setErrorMessage(""), 3000);
       }
     }
@@ -100,7 +100,7 @@ export default function Products() {
             {loading ? (
               <tr>
                 <td colSpan="6" className="text-center p-4">
-                  جاري التحميل...
+                  Loading...
                 </td>
               </tr>
             ) : products.length === 0 ? (
@@ -156,13 +156,13 @@ export default function Products() {
               await adminApiClient.post(`/products`, formData, {
                 headers: { "Content-Type": "multipart/form-data" },
               });
-              setSuccessMessage("تم إضافة المنتج بنجاح");
+              setSuccessMessage("Product added successfully.");
               fetchProducts();
               closeModals();
               setTimeout(() => setSuccessMessage(""), 3000);
             } catch (error) {
               console.error("Error adding product:", error);
-              setErrorMessage("حدث خطأ أثناء إضافة المنتج");
+              setErrorMessage("Error adding product.");
               setTimeout(() => setErrorMessage(""), 3000);
             }
           }}
@@ -178,6 +178,7 @@ export default function Products() {
           onSubmit={async (data) => {
             try {
               const formData = new FormData();
+              formData.append("_method", "PUT");
               formData.append("title", data.title);
               formData.append("description", data.description);
               formData.append("price", data.price);
@@ -188,18 +189,18 @@ export default function Products() {
                   formData.append("images[]", image);
                 });
               }
-              await adminApiClient.put(
+              await adminApiClient.post(
                 `/products/${selectedProduct.id}`,
                 formData,
                 { headers: { "Content-Type": "multipart/form-data" } }
               );
-              setSuccessMessage("تم تحديث المنتج بنجاح");
+              setSuccessMessage("Product updated successfully.");
               fetchProducts();
               closeModals();
               setTimeout(() => setSuccessMessage(""), 3000);
             } catch (error) {
               console.error("Error updating product:", error);
-              setErrorMessage("حدث خطأ أثناء تحديث المنتج");
+              setErrorMessage("Error updating product.");
               setTimeout(() => setErrorMessage(""), 3000);
             }
           }}

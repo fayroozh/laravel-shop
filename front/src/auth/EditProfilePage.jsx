@@ -22,18 +22,19 @@ const EditProfilePage = () => {
     firstName: "",
     lastName: "",
     email: "",
-    username: "",
     password: "",
   });
   const navigate = useNavigate();
 
   useEffect(() => {
     if (profile) {
+      const nameParts = profile.name ? profile.name.split(' ') : ['', ''];
+      const firstName = nameParts[0];
+      const lastName = nameParts.slice(1).join(' ');
       setFormData({
-        firstName: profile.firstName || "",
-        lastName: profile.lastName || "",
+        firstName: firstName || "",
+        lastName: lastName || "",
         email: profile.email || "",
-        username: profile.username || "",
         password: "",
       });
     }

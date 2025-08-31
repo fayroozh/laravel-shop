@@ -29,9 +29,9 @@
                     <td>{{ $p->category->name ?? '-' }}</td>
                     <td>{{ $p->stock }}</td>
                     <td>
-                        <button onclick="openModal('editProductModal{{ $p->id }}')" class="btn-edit" title="Edit">✏️
+                        <button onclick="openModal('editProductModal{{ $p->id }}')" class="btn-edit" title="Edit">✏
                             Edit</button>
-                        <button onclick="openModal('deleteProductModal{{ $p->id }}')" class="btn-delete" title="Delete">🗑️
+                        <button onclick="openModal('deleteProductModal{{ $p->id }}')" class="btn-delete" title="Delete">🗑
                             Delete</button>
                     </td>
                 </tr>
@@ -87,7 +87,8 @@
             <div class="modal-content" style="max-height: 80vh; overflow-y: auto; width: 60%;">
                 <span class="close" onclick="closeModal('editProductModal{{ $p->id }}')">&times;</span>
                 <h2>Edit Product</h2>
-                <form method="POST" action="{{ route('admin.products.update', $p->id) }}" enctype="multipart/form-data">
+                <form method="POST" action="{{ route('admin.products.update', $p->id) }}" enctype="multipart/form-data"
+                    id="editProductForm{{ $p->id }}">
                     @csrf
                     @method('PUT')
                     <div class="form-group">
@@ -112,22 +113,26 @@
                             <option value="">No Category</option>
                             @foreach($categories as $category)
                                 <option value="{{ $category->id }}" {{ $p->category_id == $category->id ? 'selected' : '' }}>
-                                    {{ $category->name }}</option>
+                                    {{ $category->name }}
+                                </option>
                             @endforeach
                         </select>
                     </div>
                     <!-- إضافة حقل الصور -->
                     <div class="form-group">
                         <label>Current Images</label>
-                        <div class="current-images" style="display: flex; gap: 10px; margin-bottom: 10px;">
-                            @if($p->image_url)
-                                <div class="image-container" style="position: relative;">
-                                    <img src="{{ asset('storage/' . $p->image_url) }}" alt="Product Image"
+                        <div class="current-images" style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px;">
+                            @foreach($p->images as $image)
+                                <div class="image-container" style="position: relative;" id="image-container-{{ $image->id }}">
+                                    <img src="{{ asset('storage/' . $image->image_path) }}" alt="Product Image"
                                         style="width: 100px; height: 100px; object-fit: cover; border-radius: 4px;">
+                                    <button type="button" class="btn-delete-img"
+                                        onclick="deleteExistingImage({{ $image->id }}, 'editProductForm{{ $p->id }}')"
+                                        style="position: absolute; top: -5px; right: -5px; background: red; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; cursor: pointer; line-height: 20px; text-align: center; font-size: 14px;">&times;</button>
                                 </div>
-                            @endif
+                            @endforeach
                         </div>
-                        <label>Add/Replace Images</label>
+                        <label>Add New Images</label>
                         <input type="file" name="images[]" class="form-control" multiple>
                         <div class="image-preview mt-2"></div>
                     </div>
@@ -159,19 +164,40 @@
     @endforeach
 
     <script>
+        // Function to delete an existing image via UI and mark for backend deletion
+        function deleteExistingImage(imageId, formId) {
+            if (confirm('Are you sure you want to remove this image?')) {
+                // Hide the image container from the view
+                const imageContainer = document.getElementById('image-container-' + imageId);
+                if (imageContainer) {
+                    imageContainer.style.display = 'none';
+                }
+
+                // Add a hidden input to the form to send the ID of the deleted image to the server
+                const form = document.getElementById(formId);
+                if (form) {
+                    const hiddenInput = document.createElement('input');
+                    hiddenInput.type = 'hidden';
+                    hiddenInput.name = 'deleted_images[]';
+                    hiddenInput.value = imageId;
+                    form.appendChild(hiddenInput);
+                }
+            }
+        }
+
         // Image preview before upload (for both add and edit forms)
         function setupImagePreview(inputElement, previewElement) {
-            inputElement?.addEventListener('change', function(event) {
+            inputElement?.addEventListener('change', function (event) {
                 const preview = previewElement;
                 preview.innerHTML = '';
-                
+
                 const files = event.target.files;
                 for (let i = 0; i < files.length; i++) {
                     const file = files[i];
                     if (!file.type.match('image.*')) continue;
-                    
+
                     const reader = new FileReader();
-                    reader.onload = function(e) {
+                    reader.onload = function (e) {
                         const img = document.createElement('img');
                         img.src = e.target.result;
                         img.style.width = '100px';

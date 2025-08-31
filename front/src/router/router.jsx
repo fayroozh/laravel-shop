@@ -26,6 +26,7 @@ import AdminCategories from "../admin/pages/Categories";
 import AdminRoles from "../admin/pages/Roles";
 import AdminActivities from "../admin/pages/Activities";
 import AdminNotifications from "../admin/pages/Notifications";
+import Feedback  from  "../pages/Feedback";
 
 const router = createBrowserRouter([
   {
@@ -40,8 +41,8 @@ const router = createBrowserRouter([
         path: "profile",
         element: <ProfilePage />,
       },
-       {
-        path: "edit-profile", // إضافة المسار هنا
+      {
+        path: "edit-profile",
         element: <EditProfilePage />,
       },
       {
@@ -68,9 +69,12 @@ const router = createBrowserRouter([
         path: "slider",
         element: <Slider />,
       },
+      {
+        path: "feedback",   // 👈 هنا أضفنا المسار الجديد
+        element: <Feedback />,
+      },
     ],
   },
-  // إضافة مسارات لوحة التحكم
   {
     path: "/admin",
     element: <AdminLayout />,
@@ -122,5 +126,4 @@ const router = createBrowserRouter([
     ],
   },
 ]);
-
 export default router;

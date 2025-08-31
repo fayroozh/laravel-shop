@@ -8,7 +8,8 @@ class Feedback extends Model
 {
     protected $fillable = [
         'name',
-        'feedback'
+        'feedback',
+        'user_id'
     ];
     public function user()
     {

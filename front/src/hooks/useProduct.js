@@ -1,8 +1,9 @@
 // hooks/useProduct.js
 import { useState, useEffect } from "react";
-import { apiClient } from "../services/api-client"; 
+import { apiClient } from "../services/api-client";
 
-export const useProduct = (searchQuery = "") => {
+export const useProduct = (filters = {}) => {
+  const { category, search, min_price, max_price } = filters;
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -12,8 +13,17 @@ export const useProduct = (searchQuery = "") => {
       setLoading(true);
       try {
         const params = {};
-        if (searchQuery) {
-          params.search = searchQuery;
+        if (search) {
+          params.search = search;
+        }
+        if (category) {
+          params.category = category;
+        }
+        if (min_price) {
+          params.min_price = min_price;
+        }
+        if (max_price) {
+          params.max_price = max_price;
         }
         const response = await apiClient.get("/frontend/products", { params });
         setData(response.data);
@@ -26,7 +36,7 @@ export const useProduct = (searchQuery = "") => {
     };
 
     fetchProducts();
-  }, [searchQuery]);
+  }, [category, search, min_price, max_price]);
 
   return { data, loading, error };
 };
